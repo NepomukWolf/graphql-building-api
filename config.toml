@@ -1,0 +1,15 @@
+default_model = "2026-SampleModel"
+default_port = 5050
+
+[geometry]
+# file | model
+default_source = "file"
+
+# Whether GraphQL source: FILE/MODEL is honored.
+respect_client_source = true
+
+# Whether geometry may be generated dynamically from the loaded IFC model.
+allow_dynamic_generation = true
+
+# Whether dynamically generated geometry is written to api/static/models.
+cache_generated = false

@@ -1,0 +1,245 @@
+type Query {
+  model(name: String): Model
+  models: [ModelInfo!]!
+}
+
+"""
+Loaded IFC model entry point.
+"""
+type Model {
+  name: String!
+  building: Building
+  storeys(where: ZoneQuery): [Storey!]!
+  spaces(where: ZoneQuery): [Space!]!
+  elements(where: ElementQuery): [BuildingElement!]!
+}
+
+"""
+Available IFC model.
+"""
+type ModelInfo {
+  name: String!
+  isDefault: Boolean!
+}
+
+"""
+Arbitrary JSON value used for IFC property values.
+"""
+scalar JSON
+
+"""
+Curated semantic filters for IFC building elements.
+"""
+enum ElementFilter {
+  """
+  Elements marked external, commonly through an IsExternal property.
+  """
+  EXTERNAL
+
+  INTERNAL
+
+  """
+  Elements marked load bearing, commonly through a LoadBearing property.
+  """
+  LOAD_BEARING
+
+  FIRE_RATED
+}
+
+"""
+Structured zone selection input.
+"""
+input ZoneQuery {
+  search: String
+}
+
+"""
+Structured element selection input.
+
+`type` accepts both friendly names such as "Wall" and real IFC names such as
+"IfcWall". `search` is intended for broad text search. `filters` and `selector`
+are schema placeholders for future semantic filtering work.
+"""
+input ElementQuery {
+  id: ID
+  type: String
+  search: String
+  filters: [ElementFilter!]
+  selector: String
+}
+
+#--------- Spatial Structure ---------#
+"""
+Common interface for spatial IFC entities.
+"""
+interface Zone {
+  id: ID!
+  name: String
+  geometry(
+    format: GeometryFormat = OBJ
+    """
+    Preferred geometry source. The server may ignore this value depending on
+    its configuration.
+    """
+    source: GeometrySource
+  ): Geometry
+  contains: [Zone]
+  elements(where: ElementQuery): [BuildingElement]
+  partOf: [Zone]
+  intersects: [Zone]
+  adjacent: [Zone]
+}
+
+"""
+The root building zone from the IFC model.
+"""
+type Building implements Zone {
+  id: ID!
+  name: String
+  geometry(
+    format: GeometryFormat = OBJ
+    """
+    Preferred geometry source. The server may ignore this value depending on
+    its configuration.
+    """
+    source: GeometrySource
+  ): Geometry
+  contains: [Zone]
+  elements(where: ElementQuery): [BuildingElement]
+  partOf: [Zone]
+  intersects: [Zone]
+  adjacent: [Zone]
+  storeys: [Storey]
+  spaces: [Space]
+}
+
+"""
+A building storey zone from the IFC spatial hierarchy.
+"""
+type Storey implements Zone {
+  id: ID!
+  name: String
+  geometry(
+    format: GeometryFormat = OBJ
+    """
+    Preferred geometry source. The server may ignore this value depending on
+    its configuration.
+    """
+    source: GeometrySource
+  ): Geometry
+  contains: [Zone]
+  elements(where: ElementQuery): [BuildingElement]
+  partOf: [Zone]
+  intersects: [Zone]
+  adjacent: [Zone]
+  spaces: [Space]
+}
+
+"""
+A space zone from the IFC spatial hierarchy.
+"""
+type Space implements Zone {
+  id: ID!
+  name: String
+  geometry(
+    format: GeometryFormat = OBJ
+    """
+    Preferred geometry source. The server may ignore this value depending on
+    its configuration.
+    """
+    source: GeometrySource
+  ): Geometry
+  elements(where: ElementQuery): [BuildingElement]
+  contains: [Zone]
+  partOf: [Zone]
+  intersects: [Zone]
+  adjacent: [Zone]
+}
+
+#--------- Elements ---------
+"""
+Physical or logical IFC building element, such as a wall, slab, door, window,
+or beam.
+"""
+type BuildingElement {
+  geometry(
+    format: GeometryFormat = OBJ
+    """
+    Preferred geometry source. The server may ignore this value depending on
+    its configuration.
+    """
+    source: GeometrySource
+  ): Geometry
+  guid: ID!
+  name: String
+  type: String
+  contains: [BuildingElement]
+  partOf: [BuildingElement]
+  properties(pset: String): [Property]
+}
+
+"""
+IFC property value with its property set name.
+"""
+type Property {
+  name: String
+  value: JSON
+  pset: String
+}
+
+"""
+Supported geometry serialization formats.
+"""
+enum GeometryFormat {
+  OBJ
+  GLB
+  STL
+  STL_ASCII
+  PLY
+  PLY_ASCII
+  OFF
+  BREP
+}
+
+"""
+How geometry payload strings are encoded in GraphQL responses.
+"""
+enum GeometryEncoding {
+  PLAIN
+  BASE64
+}
+
+"""
+Preferred source for resolving geometry.
+
+This is a client preference. The server may ignore it depending on runtime
+configuration.
+"""
+enum GeometrySource {
+  """
+  Prefer geometry from pre-generated files.
+  """
+  FILE
+
+  """
+  Prefer geometry generated from the loaded IFC model.
+  """
+  MODEL
+}
+
+#--------- Geometry ---------#
+"""
+Geometry representation for one IFC entity.
+
+Clients can request a static URL, inline payload, or both. Whether geometry is
+read from files, generated from the model, or cached is controlled by server
+configuration and the optional source argument on the parent geometry field.
+"""
+type Geometry {
+  url: String
+  payload: String
+  encoding: GeometryEncoding
+  format: GeometryFormat
+  extension: String
+  contentType: String
+}

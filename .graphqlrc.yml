@@ -1,0 +1,3 @@
+schema: api/gql/schema.graphql
+documents:
+  - "**/*.{graphql,gql}"
