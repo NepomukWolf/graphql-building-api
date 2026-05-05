@@ -180,6 +180,22 @@ If you want to jump into the code, here are some pointers about the project stru
 - `docs/architecture.md`: Mermaid diagrams for request flow, geometry resolution, providers, and static layout.
 - `scripts/generate_geometry.py`: CLI helper that generates geometry and copies IFC into the static model folder.
 
+## How to cite
+
+If you use this repository in academic work, please cite the accompanying EC3 2026 paper:
+
+```bibtex
+@inproceedings{wolf2026extensiblegraphql,
+  author    = {Nepomuk Wolf and Sebastian Esser and Andr{'e} Borrmann},
+  title     = {An Extensible GraphQL API for Fine-Grained Access to Building Information Models},
+  booktitle = {Proceedings of the 2026 European Conference on Computing in Construction (EC3 2026)},
+  year      = {2026},
+  address   = {Corfu, Greece},
+  month     = jul,
+  note      = {July 12--15, 2026}
+}
+```
+
 ## Development & next steps
 
 Currently at proof-of-concept level, not optimized and no security hardening yet.
