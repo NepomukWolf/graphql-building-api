@@ -44,9 +44,20 @@ def _model_store(info: GraphQLResolveInfo):
 def _model_context(info: GraphQLResolveInfo, model_name: str | None = None) -> dict:
     store = _model_store(info)
     selected_name = store.model_folder_name(model_name)
+    try:
+        ifc_model = store.get(model_name)
+    except (FileNotFoundError, ValueError) as exc:
+        available = ", ".join(store.available_models()) or "none"
+        raise GraphQLError(
+            f"IFC model '{selected_name}' is not available. "
+            "Add a local model at "
+            f"api/static/models/{selected_name}/{selected_name}.ifc "
+            f"or request one of the available models: {available}."
+        ) from exc
+
     return {
         "_model_name": selected_name,
-        "_ifc_model": store.get(model_name),
+        "_ifc_model": ifc_model,
         "_geometry_base_url": (
             info.context["models_base_url"] + f"{selected_name}/elements/"
         ),

@@ -9,9 +9,7 @@ class IfcModelStore:
     def __init__(self, models_dir: Path, default_model: str):
         self.models_dir = models_dir
         self.default_model = default_model
-        self._models = {
-            default_model: self._load_model(default_model),
-        }
+        self._models = {}
 
     def get(self, model_name: str | None = None):
         selected_name = model_name or self.default_model
@@ -23,6 +21,9 @@ class IfcModelStore:
         return model_name or self.default_model
 
     def available_models(self) -> list[str]:
+        if not self.models_dir.is_dir():
+            return []
+
         return sorted(
             path.name
             for path in self.models_dir.iterdir()

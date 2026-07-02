@@ -1,2 +1,6 @@
-# GraphQL API to extract geometry and semantic
+# API Package
 
+Flask + Ariadne GraphQL server and IFC resolver implementation.
+
+Local IFC files are not stored in this package. Add user-owned models under
+`api/static/models/<model>/<model>.ifc` before running model-specific queries.

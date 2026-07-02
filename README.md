@@ -23,22 +23,44 @@ Install the dependencies with:
 uv sync
 ```
 
+## Data and Model Files
+
+This repository does not redistribute IFC model files or generated geometry.
+Both can be large and may have project-specific licensing constraints. Local
+model folders under `api/static/models/` are intentionally ignored by git.
+
+Use this folder layout for your own IFC files:
+
+```text
+api/static/models/example-model/example-model.ifc
+```
+
+The folder name and IFC filename must match. Replace `example-model` with your
+own model name, or set `DEFAULT_MODEL` when starting the server.
+
 ## Quickstart
 
 Once the python environment is setup and activated, you can proceed with the following steps:
 
-1. **Add your models:** Place each IFC model in `api/static/models/<model name>/<model name>.ifc`, or use one of the sample models already provided there.
+1. **Add your model:** Place your IFC model in `api/static/models/<model name>/<model name>.ifc`.
 
-   Model files and generated geometry under `api/static/models/` are intentionally ignored by git because IFC files can be large and may have unclear redistribution rights. To use a different startup model, set `DEFAULT_MODEL` to the folder/model name:
+   For the default configuration:
 
    ```shell
-   DEFAULT_MODEL=my_model uv run api/app.py
+   mkdir -p api/static/models/example-model
+   cp /path/to/your/model.ifc api/static/models/example-model/example-model.ifc
+   ```
+
+   To use a different startup model, set `DEFAULT_MODEL` to the folder/model name:
+
+   ```shell
+   DEFAULT_MODEL=my-model uv run api/app.py
    ```
 
 2. **Pre-generate geometry model:** There is a small CLI to extract and save element-wise geometry for an IFC model. Example usage:
 
    ```shell
-   uv run python -m scripts.generate_geometry api/static/models/2026-SampleModel/2026-SampleModel.ifc --formats OBJ GLB STL
+   uv run python -m scripts.generate_geometry api/static/models/example-model/example-model.ifc --formats OBJ GLB GLTF WKT STL
    ```
 
    The generated geometry files will be located at `api/static/models/<model name>/elements/<element guid>/`.
@@ -49,7 +71,9 @@ Once the python environment is setup and activated, you can proceed with the fol
    uv run api/app.py
    ```
 
-   The server exposes the IFC model in the GraphQL context and can return geometry URLs for pre-generated files or embedded payloads from files or dynamic exporters.
+   The server can start without local models. `models` will return an empty
+   list until you add an IFC file. Model-specific queries return a clear error
+   if the requested model is not available.
 
 4. **Explore the API:** Use your preferred GraphQL client against:
 
@@ -146,7 +170,7 @@ This query returns a list of wall elements with URLs pointing to static geometry
 
 ```graphql
 query ExternalWalls {
-  model(name: "2026-SampleModel") {
+  model(name: "example-model") {
     elements(where: { type: "Wall", filters: [EXTERNAL] }) {
       guid
       name
@@ -168,7 +192,7 @@ requires `IsExternal = true`, while `LOAD_BEARING` requires
 
 ```graphql
 query SelectorWalls {
-  model(name: "2026-SampleModel") {
+  model(name: "example-model") {
     elements(where: { selector: "IfcWall" }) {
       guid
       name
@@ -185,7 +209,7 @@ with `type`, `search`, and `filters`.
 
 ```graphql
 query ElementTopology {
-  model(name: "2026-SampleModel") {
+  model(name: "example-model") {
     elements(where: { type: "Wall" }) {
       guid
       name
@@ -214,7 +238,7 @@ approximate topology relation intended for lightweight querying and demos.
 
 ```graphql
 query GetElement {
-  model(name: "2026-SampleModel") {
+  model(name: "example-model") {
     elements(where: { id: "<ELEMENT-GUID-HERE>" }) {
       guid
       name
@@ -249,7 +273,7 @@ This returns a list containing the matching element when the id exists.
 
 ```graphql
 query WallDataSheets {
-  model(name: "2026-SampleModel") {
+  model(name: "example-model") {
     elements(where: { type: "Wall" }) {
       guid
       name
@@ -302,6 +326,12 @@ If you use this repository in academic work, please cite the accompanying EC3 20
   note      = {July 12--15, 2026}
 }
 ```
+
+The repository also includes `CITATION.cff` for citation-aware tools.
+
+## License
+
+This software is released under the MIT License. See `LICENSE` for details.
 
 ## Development & next steps
 

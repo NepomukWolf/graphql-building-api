@@ -91,7 +91,7 @@ wheels = [
 ]
 
 [[package]]
-name = "for5672"
+name = "graphql-building-api"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

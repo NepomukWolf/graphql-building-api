@@ -1,4 +1,4 @@
-default_model = "2026-SampleModel"
+default_model = "example-model"
 default_port = 5050
 
 [geometry]

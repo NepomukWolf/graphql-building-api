@@ -1,5 +1,6 @@
 query ElementTopologyDemo {
-  model(name: "2026-SampleModel") {
+  # Replace example-model and the element id with values from your local model.
+  model(name: "example-model") {
     elements(where: { id: "0Czv28JAHDuepx33rj$lAZ" }) {
       guid
       name

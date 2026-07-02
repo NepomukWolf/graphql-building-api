@@ -87,26 +87,23 @@ flowchart LR
     TrimeshProvider --> Handler[GeometryHandler]
     Handler --> IfcOpenShell[IfcOpenShell geometry]
     Handler --> Trimesh[Trimesh mesh]
-    Trimesh --> MeshFormats[OBJ, GLB, STL, PLY, OFF]
+    Trimesh --> MeshFormats[OBJ, GLB, GLTF, STL, PLY, OFF, WKT]
 ```
 
 ## Static Model Folder Layout
 
 ```mermaid
 flowchart TD
-    Root[api/static/models] --> ModelA[2026-SampleModel]
-    Root --> ModelB[duplex_arch]
+    Root[api/static/models] --> ModelA[example-model]
+    Root --> ModelB[another-local-model]
 
-    ModelA --> IfcA[2026-SampleModel.ifc]
+    ModelA --> IfcA[example-model.ifc]
     ModelA --> ElementsA[elements]
 
     ElementsA --> ElementFolder[element-guid]
     ElementFolder --> Obj[geometry.obj]
     ElementFolder --> Mtl[geometry.mtl]
     ElementFolder --> Glb[geometry.glb]
-    ElementFolder --> Future[future assets]
-
-    Future --> Gltf[geometry.gltf]
-    Future --> Bin[geometry.bin]
-    Future --> Texture[texture.png]
+    ElementFolder --> Gltf[geometry.gltf]
+    ElementFolder --> Wkt[geometry.wkt]
 ```

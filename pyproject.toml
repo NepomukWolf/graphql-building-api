@@ -1,8 +1,9 @@
 [project]
-name = "for5672"
+name = "graphql-building-api"
 version = "0.1.0"
-description = "Add your description here"
+description = "Prototype GraphQL API for simplified access to IFC building models"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "ariadne>=0.26.2",

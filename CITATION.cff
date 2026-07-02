@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software in academic work, please cite the accompanying EC3 2026 paper."
+title: "An Extensible GraphQL API for Fine-Grained Access to Building Information Models"
+type: software
+authors:
+  - family-names: Wolf
+    given-names: Nepomuk
+  - family-names: Esser
+    given-names: Sebastian
+  - family-names: Borrmann
+    given-names: Andre
+year: 2026
+repository-code: "https://github.com/NepomukWolf/graphql-building-api"
+preferred-citation:
+  type: conference-paper
+  title: "An Extensible GraphQL API for Fine-Grained Access to Building Information Models"
+  authors:
+    - family-names: Wolf
+      given-names: Nepomuk
+    - family-names: Esser
+      given-names: Sebastian
+    - family-names: Borrmann
+      given-names: Andre
+  conference:
+    name: "2026 European Conference on Computing in Construction"
+    location: "Corfu, Greece"
+    date-start: 2026-07-12
+    date-end: 2026-07-15
+  year: 2026

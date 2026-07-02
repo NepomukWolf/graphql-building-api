@@ -1,5 +1,6 @@
 query InvalidSelectorDemo {
-  model(name: "2026-SampleModel") {
+  # Replace example-model with your local model folder name.
+  model(name: "example-model") {
     elements(where: { selector: "???" }) {
       guid
       type
