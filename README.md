@@ -138,6 +138,45 @@ query ListWalls {
 
 This query returns a list of wall elements with URLs pointing to static geometry files. Type filters accept both friendly names like `"Wall"` and IFC names like `"IfcWall"`.
 
+**List external walls with a curated semantic filter:**
+
+```graphql
+query ExternalWalls {
+  model(name: "2026-SampleModel") {
+    elements(where: { type: "Wall", filters: [EXTERNAL] }) {
+      guid
+      name
+      type
+      properties(pset: "Pset_WallCommon") {
+        name
+        value
+      }
+    }
+  }
+}
+```
+
+Curated filters use explicit IFC property values. For example, `EXTERNAL`
+requires `IsExternal = true`, while `LOAD_BEARING` requires
+`LoadBearing = true`. Multiple filters are combined with AND semantics.
+
+**Use a raw IfcOpenShell selector:**
+
+```graphql
+query SelectorWalls {
+  model(name: "2026-SampleModel") {
+    elements(where: { selector: "IfcWall" }) {
+      guid
+      name
+      type
+    }
+  }
+}
+```
+
+The selector is applied to the current candidate set, so it can be combined
+with `type`, `search`, and `filters`.
+
 **Fetch one element by id and request inline OBJ:**
 
 ```graphql

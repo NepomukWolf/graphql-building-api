@@ -3,9 +3,11 @@ from __future__ import annotations
 from typing import Any, cast
 
 from ariadne import InterfaceType, ObjectType, QueryType
+from graphql import GraphQLError
 from graphql.type.definition import GraphQLResolveInfo
 import ifcopenshell.entity_instance
 import ifcopenshell.file
+import ifcopenshell.util.selector as selector
 
 from api.ifc.helpers import (
     element_info,
@@ -15,8 +17,9 @@ from api.ifc.helpers import (
     get_properties,
     is_building_element,
     is_zone,
+    matches_element_filters,
     matches_element_type,
-    matches_filter,
+    matches_search,
     zone_info,
 )
 from api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
@@ -114,32 +117,64 @@ def _zone_parent(obj) -> list[dict]:
 
 def _element_query_values(
     where: dict | None = None,
-) -> tuple[str | None, str | None, str | None]:
+) -> tuple[str | None, str | None, str | None, list[str] | None, str | None]:
     where = where or {}
-    return where.get("id"), where.get("type"), where.get("search")
+    return (
+        where.get("id"),
+        where.get("type"),
+        where.get("search"),
+        where.get("filters"),
+        where.get("selector"),
+    )
 
 
 def _matches_element_query(
     entity: ifcopenshell.entity_instance,
     where: dict | None = None,
 ) -> bool:
-    id_value, type_value, search_value = _element_query_values(where)
+    id_value, type_value, search_value, filters, _selector_value = _element_query_values(
+        where
+    )
     return (
         (not id_value or get_entity_id(entity) == id_value)
         and matches_element_type(entity, type_value)
-        and matches_filter(entity, search_value)
+        and matches_search(entity, search_value)
+        and matches_element_filters(entity, filters)
     )
+
+
+def _apply_element_query(
+    ifc_model: ifcopenshell.file,
+    candidates: list[ifcopenshell.entity_instance],
+    where: dict | None = None,
+) -> list[ifcopenshell.entity_instance]:
+    elements = [entity for entity in candidates if _matches_element_query(entity, where)]
+    selector_value = (where or {}).get("selector")
+    if not selector_value or not selector_value.strip():
+        return elements
+
+    try:
+        selected = selector.filter_elements(
+            ifc_model,
+            selector_value,
+            elements=set(elements),
+        )
+    except Exception as exc:
+        raise GraphQLError(f"Invalid IFC selector: {selector_value}") from exc
+
+    return [entity for entity in elements if entity in selected]
 
 
 def _zone_elements(
     obj,
     where: dict | None = None,
 ) -> list[dict]:
-    elements = [
+    candidates = [
         child
         for child in get_children(_ifc_entity(obj))
-        if is_building_element(child) and _matches_element_query(child, where)
+        if is_building_element(child)
     ]
+    elements = _apply_element_query(_ifc_model(obj), candidates, where)
     return [_with_model_context(element_info(element), obj) for element in elements]
 
 
@@ -151,7 +186,7 @@ def _all_model_zones(model_obj, ifc_type: str, where: dict | None = None) -> lis
     return [
         _with_model_context(zone_info(entity), model_obj)
         for entity in _ifc_model(model_obj).by_type(ifc_type)
-        if matches_filter(entity, _zone_query_search(where))
+        if matches_search(entity, _zone_query_search(where))
     ]
 
 
@@ -192,10 +227,14 @@ def resolve_model_spaces(obj, _info: GraphQLResolveInfo, where: dict | None = No
 
 @model.field("elements")
 def resolve_model_elements(obj, _info: GraphQLResolveInfo, where: dict | None = None):
+    elements = _apply_element_query(
+        _ifc_model(obj),
+        list(_ifc_model(obj).by_type("IfcBuildingElement")),
+        where,
+    )
     return [
         _with_model_context(element_info(entity), obj)
-        for entity in _ifc_model(obj).by_type("IfcBuildingElement")
-        if _matches_element_query(entity, where)
+        for entity in elements
     ]
 
 

@@ -88,7 +88,7 @@ def get_properties(
     ]
 
 
-def matches_filter(
+def matches_search(
     entity: ifcopenshell.entity_instance, filter_value: str | None
 ) -> bool:
     if not filter_value:
@@ -102,6 +102,12 @@ def matches_filter(
         entity.is_a()[3:] if entity.is_a().startswith("Ifc") else entity.is_a(),
     ]
     return any(value and needle in str(value).casefold() for value in values)
+
+
+def matches_filter(
+    entity: ifcopenshell.entity_instance, filter_value: str | None
+) -> bool:
+    return matches_search(entity, filter_value)
 
 
 def matches_element_type(
@@ -123,3 +129,73 @@ def matches_element_type(
         singular = normalized
 
     return entity.is_a(normalized) or entity.is_a(singular)
+
+
+def matches_element_filters(
+    entity: ifcopenshell.entity_instance,
+    filters: list[str] | None,
+) -> bool:
+    return all(matches_element_filter(entity, filter_name) for filter_name in filters or [])
+
+
+def matches_element_filter(
+    entity: ifcopenshell.entity_instance,
+    filter_name: str,
+) -> bool:
+    properties = _all_pset_properties(entity)
+    if filter_name == "EXTERNAL":
+        return _property_bool(properties, "IsExternal") is True
+    if filter_name == "INTERNAL":
+        return _property_bool(properties, "IsExternal") is False
+    if filter_name == "LOAD_BEARING":
+        return _property_bool(properties, "LoadBearing") is True
+    if filter_name == "FIRE_RATED":
+        return _has_non_empty_property(
+            properties,
+            ["FireRating", "FireResistanceRating"],
+        )
+    return False
+
+
+def _all_pset_properties(entity: ifcopenshell.entity_instance) -> dict[str, object]:
+    properties: dict[str, object] = {}
+    for pset in (el.get_psets(entity) or {}).values():
+        for name, value in pset.items():
+            if name != "id":
+                properties[name] = value
+    return properties
+
+
+def _property_bool(properties: dict[str, object], name: str) -> bool | None:
+    if name not in properties:
+        return None
+
+    value = properties[name]
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().casefold()
+        if normalized in {"true", "yes", "1"}:
+            return True
+        if normalized in {"false", "no", "0"}:
+            return False
+    if isinstance(value, (int, float)):
+        if value == 1:
+            return True
+        if value == 0:
+            return False
+    return None
+
+
+def _has_non_empty_property(
+    properties: dict[str, object],
+    names: list[str],
+) -> bool:
+    for name in names:
+        value = properties.get(name)
+        if value is None:
+            continue
+        if isinstance(value, str) and not value.strip():
+            continue
+        return True
+    return False

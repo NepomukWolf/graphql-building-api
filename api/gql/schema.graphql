@@ -57,8 +57,10 @@ input ZoneQuery {
 Structured element selection input.
 
 `type` accepts both friendly names such as "Wall" and real IFC names such as
-"IfcWall". `search` is intended for broad text search. `filters` and `selector`
-are schema placeholders for future semantic filtering work.
+"IfcWall". `search` is intended for broad text search. `filters` applies
+curated semantic property filters. `selector` accepts a raw IfcOpenShell selector
+query and is scoped to the current candidate set. All constraints are combined
+with AND semantics.
 """
 input ElementQuery {
   id: ID
