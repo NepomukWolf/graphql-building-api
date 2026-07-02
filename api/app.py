@@ -11,6 +11,7 @@ if __package__ is None or __package__ == "":
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from api.config import API_DIR, DEFAULT_MODEL, DEFAULT_PORT, GEOMETRY_CONFIG, MODELS_DIR
+from api.gql.extensions import load_extensions
 from api.gql.resolvers import all_types
 from api.ifc.models import IfcModelStore
 
@@ -21,8 +22,12 @@ logging.basicConfig(level=logging.INFO)
 
 # Construct the executable schema
 type_defs = load_schema_from_path(str(API_DIR / "gql" / "schema.graphql"))
-# schema = make_executable_schema(type_defs)
-schema = make_executable_schema(type_defs, *all_types)
+extension_type_defs, extension_types = load_extensions(API_DIR / "extensions")
+schema = make_executable_schema(
+    [type_defs, *extension_type_defs],
+    *all_types,
+    *extension_types,
+)
 
 # Load IFC model once (on server start)
 ifc_models = IfcModelStore(MODELS_DIR, DEFAULT_MODEL)

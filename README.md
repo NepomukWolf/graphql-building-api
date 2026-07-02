@@ -97,6 +97,23 @@ The server decides whether client source preferences are honored through
 `config.toml`. Generated geometry is only written to `api/static/models/` when
 `geometry.cache_generated = true`.
 
+## Schema Extensions
+
+At startup, the server automatically loads GraphQL extensions from
+`api/extensions/`. Each direct child folder with a `schema.graphql` file is
+treated as an extension. A folder may also include `resolvers.py` exporting
+`all_types`, a list of Ariadne bindables such as `ObjectType` instances.
+
+```text
+api/extensions/my-extension/
+  schema.graphql
+  resolvers.py
+```
+
+The prototype includes `api/extensions/lca-extension/`, which extends
+`BuildingElement` with `dataSheetURL` and resolves deterministic demo URLs for
+common element types.
+
 ### Example Queries
 
 Some example queries.
@@ -156,6 +173,23 @@ query GetElement {
 
 This returns a list containing the matching element when the id exists.
 
+**Query extension data:**
+
+```graphql
+query WallDataSheets {
+  model(name: "2026-SampleModel") {
+    elements(where: { type: "Wall" }) {
+      guid
+      name
+      type
+      dataSheetURL
+    }
+  }
+}
+```
+
+The `dataSheetURL` field is provided by the demo extension, not the core schema.
+
 **List available models:**
 
 ```graphql
@@ -175,6 +209,7 @@ If you want to jump into the code, here are some pointers about the project stru
 - `api/config.py`: local runtime configuration.
 - `config.toml`: project-level runtime defaults.
 - `api/gql/`: GraphQL schema and resolver bindings.
+- `api/extensions/`: auto-loaded schema extensions and optional extension resolvers.
 - `api/ifc/`: IFC model loading, relationship helpers, and geometry helpers.
 - `api/static/models/<model>/`: canonical local model folder, containing `<model>.ifc` and generated geometry under `elements/<element guid>/`.
 - `docs/architecture.md`: Mermaid diagrams for request flow, geometry resolution, providers, and static layout.
