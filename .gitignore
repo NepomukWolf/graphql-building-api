@@ -13,5 +13,7 @@ wheels/
 api/static/models/*
 !api/static/models/.gitkeep
 
+scratch
+
 # Editor config
 .vscode
