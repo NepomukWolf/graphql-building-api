@@ -9,9 +9,9 @@ uv run api/app.py
 Open `http://127.0.0.1:5050/graphql` in a GraphQL client, then paste one of the
 queries from this folder.
 
-`topology.graphql` demonstrates the narrow topology fields. The current sample
-model may return empty lists because these fields use direct IfcOpenShell
-intersection and clearance checks, not approximate bounding boxes.
+`topology.graphql` demonstrates the narrow topology fields. These fields use
+cached axis-aligned bounding boxes, so they are approximate rather than exact
+solid-geometry relations.
 
 You can also run a query file with `curl`:
 

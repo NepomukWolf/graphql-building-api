@@ -200,11 +200,11 @@ query ElementTopology {
 }
 ```
 
-Topology fields use IfcOpenShell geometry checks. `intersects` uses geometric
-intersection clashes, while `adjacent` uses a 5 cm clearance check. Results are
-based on direct element or zone geometry; building and storey topology may be
-empty when the IFC model does not provide direct geometry for those spatial
-entities.
+Topology fields use cached axis-aligned bounding boxes generated from IFC
+geometry. `intersects` returns elements whose boxes overlap with positive volume
+on all axes. `adjacent` returns elements whose boxes do not intersect, but are
+within 5 cm on one axis and overlap on the other two axes. This is an
+approximate topology relation intended for lightweight querying and demos.
 
 **Fetch one element by id and request inline OBJ:**
 

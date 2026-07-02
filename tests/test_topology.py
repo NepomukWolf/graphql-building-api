@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import unittest
-from types import SimpleNamespace
 from unittest.mock import patch
 
 from api.gql import resolvers
-from api.ifc.topology import TopologyService
+from api.ifc.topology import BoundingBox, TopologyService, boxes_adjacent, boxes_intersect
 
 
 class FakeEntity:
@@ -34,86 +33,90 @@ class FakeModel:
         return [entity for entity in self.elements if entity.is_a(ifc_type)]
 
 
-class FakeTree:
-    def __init__(self, intersections=(), clearances=(), error: Exception | None = None):
-        self.intersections = intersections
-        self.clearances = clearances
-        self.error = error
-
-    def clash_intersection_many(self, *_):
-        if self.error:
-            raise self.error
-        return self.intersections
-
-    def clash_clearance_many(self, *_):
-        if self.error:
-            raise self.error
-        return self.clearances
-
-
 class TopologyServiceTests(unittest.TestCase):
-    def test_intersections_are_deduplicated_and_preserve_candidate_order(self):
+    def test_boxes_intersect_when_all_axes_overlap_with_positive_volume(self):
+        box_a = BoundingBox(0, 0, 0, 2, 2, 2)
+        box_b = BoundingBox(1, 1, 1, 3, 3, 3)
+        box_c = BoundingBox(2, 1, 1, 3, 3, 3)
+
+        self.assertTrue(boxes_intersect(box_a, box_b))
+        self.assertFalse(boxes_intersect(box_a, box_c))
+
+    def test_boxes_adjacent_when_close_on_one_axis_and_overlapping_on_others(self):
+        box_a = BoundingBox(0, 0, 0, 1, 1, 1)
+        adjacent_box = BoundingBox(1.03, 0.2, 0.2, 2, 0.8, 0.8)
+        far_box = BoundingBox(1.10, 0.2, 0.2, 2, 0.8, 0.8)
+        intersecting_box = BoundingBox(0.5, 0.2, 0.2, 2, 0.8, 0.8)
+
+        self.assertTrue(boxes_adjacent(box_a, adjacent_box))
+        self.assertFalse(boxes_adjacent(box_a, far_box))
+        self.assertFalse(boxes_adjacent(box_a, intersecting_box))
+
+    def test_intersections_preserve_candidate_order(self):
         source = FakeEntity("IfcWall", "source")
         candidate_a = FakeEntity("IfcDoor", "a")
         candidate_b = FakeEntity("IfcDoor", "b")
-        tree = FakeTree(
-            intersections=[
-                SimpleNamespace(a=source, b=candidate_b),
-                SimpleNamespace(a=candidate_a, b=source),
-                SimpleNamespace(a=source, b=candidate_a),
-            ]
-        )
-
-        result_ids = TopologyService()._resolve_related_ids(
-            tree,
-            source,
-            [candidate_a, candidate_b],
-            "intersects",
-        )
-
-        self.assertEqual(result_ids, ["a", "b"])
-
-    def test_adjacent_uses_clearance_results(self):
-        source = FakeEntity("IfcWall", "source")
-        candidate = FakeEntity("IfcDoor", "candidate")
-        tree = FakeTree(clearances=[SimpleNamespace(a=source, b=candidate)])
-
-        result_ids = TopologyService()._resolve_related_ids(
-            tree,
-            source,
-            [candidate],
-            "adjacent",
-        )
-
-        self.assertEqual(result_ids, ["candidate"])
-
-    def test_tree_errors_return_empty_relations(self):
-        source = FakeEntity("IfcWall", "source")
-        candidate = FakeEntity("IfcDoor", "candidate")
-        tree = FakeTree(error=RuntimeError("no geometry"))
-
-        result_ids = TopologyService()._resolve_related_ids(
-            tree,
-            source,
-            [candidate],
-            "intersects",
-        )
-
-        self.assertEqual(result_ids, [])
-
-    def test_model_tree_build_errors_return_empty_relations(self):
-        service = TopologyService()
-        source = FakeEntity("IfcWall", "source")
-        candidate = FakeEntity("IfcDoor", "candidate")
+        topology = TopologyService()
 
         with patch.object(
-            service,
-            "_model_topology",
-            side_effect=RuntimeError("tree failed"),
+            topology,
+            "_compute_box",
+            side_effect=[
+                BoundingBox(0, 0, 0, 2, 2, 2),
+                BoundingBox(3, 3, 3, 4, 4, 4),
+                BoundingBox(1, 1, 1, 3, 3, 3),
+            ],
         ):
-            result = service.intersects(object(), source, [candidate])
+            result = topology.intersects(object(), source, [candidate_a, candidate_b])
+
+        self.assertEqual(result, [candidate_b])
+
+    def test_adjacent_uses_bounding_box_clearance(self):
+        source = FakeEntity("IfcWall", "source")
+        candidate = FakeEntity("IfcDoor", "candidate")
+        topology = TopologyService()
+        model = object()
+
+        with patch.object(
+            topology,
+            "_compute_box",
+            side_effect=[
+                BoundingBox(0, 0, 0, 1, 1, 1),
+                BoundingBox(1.03, 0, 0, 2, 1, 1),
+            ],
+        ):
+            result = topology.adjacent(object(), source, [candidate])
+
+        self.assertEqual(result, [candidate])
+
+    def test_geometry_errors_return_empty_relations(self):
+        source = FakeEntity("IfcWall", "source")
+        candidate = FakeEntity("IfcDoor", "candidate")
+        topology = TopologyService()
+
+        with patch.object(topology, "_compute_box", return_value=None):
+            result = topology.intersects(object(), source, [candidate])
 
         self.assertEqual(result, [])
+
+    def test_computed_boxes_are_cached(self):
+        source = FakeEntity("IfcWall", "source")
+        candidate = FakeEntity("IfcDoor", "candidate")
+        topology = TopologyService()
+        model = object()
+
+        with patch.object(
+            topology,
+            "_compute_box",
+            side_effect=[
+                BoundingBox(0, 0, 0, 1, 1, 1),
+                BoundingBox(0.5, 0.5, 0.5, 2, 2, 2),
+            ],
+        ) as compute_box:
+            topology.intersects(model, source, [candidate])
+            topology.intersects(model, source, [candidate])
+
+        self.assertEqual(compute_box.call_count, 2)
 
 
 class TopologyResolverTests(unittest.TestCase):
