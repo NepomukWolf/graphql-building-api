@@ -197,11 +197,13 @@ Supported geometry serialization formats.
 enum GeometryFormat {
   OBJ
   GLB
+  GLTF
   STL
   STL_ASCII
   PLY
   PLY_ASCII
   OFF
+  WKT
   BREP
 }
 

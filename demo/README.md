@@ -13,6 +13,9 @@ queries from this folder.
 cached axis-aligned bounding boxes, so they are approximate rather than exact
 solid-geometry relations.
 
+`geometry-formats.graphql` demonstrates `WKT` and self-contained `GLTF`
+payloads generated from the loaded model.
+
 You can also run a query file with `curl`:
 
 ```sh

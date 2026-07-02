@@ -4,9 +4,12 @@ import logging
 from typing import Dict, Any
 import ifcopenshell
 import json
+from pathlib import Path
 
+from api.config import GeometryConfig
 from api.ifc.geometry import GeometryHandler
 from api.ifc.geometry_formats import GEOMETRY_FORMATS, normalize_geometry_format
+from api.ifc.geometry_service import GeometryRequest, geometry_service
 
 logger = logging.getLogger(__name__)
 
@@ -86,6 +89,29 @@ def generate_geometry(
 
             for format_name in requested_formats:
                 format_spec = GEOMETRY_FORMATS[format_name]
+                output_path = os.path.join(
+                    element_dir, f"geometry{format_spec.extension}"
+                )
+
+                if format_spec.provider_hint in {"gltf", "wkt"}:
+                    request = GeometryRequest(
+                        entity=product,
+                        guid=guid,
+                        format_name=format_name,
+                        elements_dir=Path(elements_dir),
+                        geometry_base_url="",
+                        source="MODEL",
+                        config=GeometryConfig(),
+                    )
+                    artifact = geometry_service.generate(request)
+                    if artifact is None:
+                        logger.warning("Failed to generate format: %s", format_name)
+                        continue
+                    with open(output_path, "wb") as f:
+                        f.write(artifact.data)
+                    written_by_format[format_name] += 1
+                    continue
+
                 if not format_spec.trimesh_file_type:
                     logger.warning(
                         "Skipping non-Trimesh format for generation: %s", format_name
@@ -99,9 +125,6 @@ def generate_geometry(
                 if isinstance(output, str):
                     output = output.encode("utf-8")
 
-                output_path = os.path.join(
-                    element_dir, f"geometry{format_spec.extension}"
-                )
                 if format_name == "OBJ":
                     mtl_name = "geometry.mtl"
                     prefix = f"mtllib {mtl_name}\n".encode("utf-8")

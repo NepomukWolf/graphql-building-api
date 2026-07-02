@@ -80,9 +80,13 @@ Each building element returned by the API provides at least the following fields
 - `properties(pset: String)`: common PSet values as `{ name, value, pset }`
 - `partOf` / `contains`: relationships to parent/children elements
 
-Supported geometry formats are `OBJ`, `GLB`, `STL`, `STL_ASCII`, `PLY`,
-`PLY_ASCII`, `OFF`, and `BREP`. `BREP` is exposed for future exact-geometry
-support and currently resolves from existing `.brep` files only.
+Supported geometry formats are `OBJ`, `GLB`, `GLTF`, `STL`, `STL_ASCII`,
+`PLY`, `PLY_ASCII`, `OFF`, `WKT`, and `BREP`. `GLTF` is exported as a
+self-contained `.gltf` JSON file with embedded base64 buffers so it still fits
+the single URL/payload geometry model. `GLB` remains the compact single-file
+binary glTF option. `WKT` is exported from the triangulated mesh as a
+`GEOMETRYCOLLECTION Z` of triangular polygons. `BREP` is exposed for future
+exact-geometry support and currently resolves from existing `.brep` files only.
 
 Geometry source can be requested per field:
 

@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import base64
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote, urljoin
 
 import ifcopenshell.entity_instance
+from shapely.geometry import GeometryCollection, Polygon
+from shapely import to_wkt
 
 from api.config import GeometryConfig
 
@@ -89,6 +92,43 @@ class TrimeshGeometryProvider:
         return GeometryArtifact(data, request.format)
 
 
+class GltfGeometryProvider:
+    def generate(self, request: GeometryRequest) -> GeometryArtifact | None:
+        if request.format.provider_hint != "gltf":
+            return None
+
+        try:
+            handler = GeometryHandler(request.entity)
+            exported = handler.export("gltf")
+            if not isinstance(exported, dict):
+                return None
+            data = embed_gltf_buffers(exported)
+        except Exception:
+            return None
+
+        return GeometryArtifact(data, request.format)
+
+
+class WktGeometryProvider:
+    def generate(self, request: GeometryRequest) -> GeometryArtifact | None:
+        if request.format.provider_hint != "wkt":
+            return None
+
+        try:
+            handler = GeometryHandler(request.entity)
+            triangles = [
+                Polygon([handler.mesh.vertices[index] for index in face])
+                for face in handler.mesh.faces
+            ]
+            data = to_wkt(GeometryCollection(triangles), output_dimension=3).encode(
+                "utf-8"
+            )
+        except Exception:
+            return None
+
+        return GeometryArtifact(data, request.format)
+
+
 class OpenCascadeGeometryProvider:
     def generate(self, request: GeometryRequest) -> GeometryArtifact | None:
         if request.format.provider_hint != "opencascade":
@@ -103,6 +143,8 @@ class GeometryService:
         self.file_provider = FileGeometryProvider()
         self.generation_providers = [
             OpenCascadeGeometryProvider(),
+            GltfGeometryProvider(),
+            WktGeometryProvider(),
             TrimeshGeometryProvider(),
         ]
 
@@ -167,6 +209,27 @@ def encode_geometry_payload(data: bytes, format_spec: GeometryFormatSpec) -> str
     if format_spec.encoding == "BASE64":
         return base64.b64encode(data).decode("utf-8")
     return data.decode("utf-8", errors="ignore")
+
+
+def embed_gltf_buffers(exported: dict[str, bytes]) -> bytes:
+    gltf_bytes = exported.get("model.gltf")
+    if gltf_bytes is None:
+        raise ValueError("Trimesh GLTF export did not include model.gltf")
+
+    gltf = json.loads(gltf_bytes.decode("utf-8"))
+    for buffer in gltf.get("buffers", []):
+        uri = buffer.get("uri")
+        if not uri or uri.startswith("data:"):
+            continue
+        buffer_data = exported.get(uri)
+        if buffer_data is None:
+            raise ValueError(f"Trimesh GLTF export did not include buffer: {uri}")
+        buffer["uri"] = (
+            "data:application/octet-stream;base64,"
+            + base64.b64encode(buffer_data).decode("ascii")
+        )
+
+    return json.dumps(gltf, separators=(",", ":")).encode("utf-8")
 
 
 geometry_service = GeometryService()

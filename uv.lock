@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 
 [[package]]
@@ -102,6 +102,7 @@ dependencies = [
     { name = "networkx" },
     { name = "pyglet" },
     { name = "scipy" },
+    { name = "shapely" },
     { name = "trimesh" },
 ]
 
@@ -114,6 +115,7 @@ requires-dist = [
     { name = "networkx", specifier = ">=3.5" },
     { name = "pyglet", specifier = "<2" },
     { name = "scipy", specifier = ">=1.16.3" },
+    { name = "shapely", specifier = ">=2.1.2" },
     { name = "trimesh", specifier = ">=4.9.0" },
 ]
 

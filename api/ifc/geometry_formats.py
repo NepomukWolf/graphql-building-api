@@ -32,6 +32,14 @@ GEOMETRY_FORMATS = {
         is_text=False,
         trimesh_file_type="glb",
     ),
+    "GLTF": GeometryFormatSpec(
+        name="GLTF",
+        extension=".gltf",
+        content_type="model/gltf+json",
+        encoding="PLAIN",
+        is_text=True,
+        provider_hint="gltf",
+    ),
     "STL": GeometryFormatSpec(
         name="STL",
         extension=".stl",
@@ -73,6 +81,14 @@ GEOMETRY_FORMATS = {
         encoding="PLAIN",
         is_text=True,
         trimesh_file_type="off",
+    ),
+    "WKT": GeometryFormatSpec(
+        name="WKT",
+        extension=".wkt",
+        content_type="text/plain",
+        encoding="PLAIN",
+        is_text=True,
+        provider_hint="wkt",
     ),
     "BREP": GeometryFormatSpec(
         name="BREP",

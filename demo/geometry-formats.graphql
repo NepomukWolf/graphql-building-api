@@ -1,0 +1,21 @@
+query GeometryFormatsDemo {
+  model(name: "2026-SampleModel") {
+    elements(where: { id: "0Czv28JAHDuepx33rj$lAZ" }) {
+      guid
+      name
+      type
+      wkt: geometry(format: WKT, source: MODEL) {
+        payload
+        encoding
+        extension
+        contentType
+      }
+      gltf: geometry(format: GLTF, source: MODEL) {
+        payload
+        encoding
+        extension
+        contentType
+      }
+    }
+  }
+}
