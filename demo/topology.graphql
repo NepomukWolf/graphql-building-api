@@ -1,0 +1,19 @@
+query ElementTopologyDemo {
+  model(name: "2026-SampleModel") {
+    elements(where: { type: "Wall" }) {
+      guid
+      name
+      type
+      intersects(where: { type: "Door" }) {
+        guid
+        name
+        type
+      }
+      adjacent(where: { type: "Slab" }) {
+        guid
+        name
+        type
+      }
+    }
+  }
+}

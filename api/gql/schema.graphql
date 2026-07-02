@@ -88,8 +88,8 @@ interface Zone {
   contains: [Zone]
   elements(where: ElementQuery): [BuildingElement]
   partOf: [Zone]
-  intersects: [Zone]
-  adjacent: [Zone]
+  intersects(where: ZoneQuery): [Zone]
+  adjacent(where: ZoneQuery): [Zone]
 }
 
 """
@@ -109,8 +109,8 @@ type Building implements Zone {
   contains: [Zone]
   elements(where: ElementQuery): [BuildingElement]
   partOf: [Zone]
-  intersects: [Zone]
-  adjacent: [Zone]
+  intersects(where: ZoneQuery): [Zone]
+  adjacent(where: ZoneQuery): [Zone]
   storeys: [Storey]
   spaces: [Space]
 }
@@ -132,8 +132,8 @@ type Storey implements Zone {
   contains: [Zone]
   elements(where: ElementQuery): [BuildingElement]
   partOf: [Zone]
-  intersects: [Zone]
-  adjacent: [Zone]
+  intersects(where: ZoneQuery): [Zone]
+  adjacent(where: ZoneQuery): [Zone]
   spaces: [Space]
 }
 
@@ -154,8 +154,8 @@ type Space implements Zone {
   elements(where: ElementQuery): [BuildingElement]
   contains: [Zone]
   partOf: [Zone]
-  intersects: [Zone]
-  adjacent: [Zone]
+  intersects(where: ZoneQuery): [Zone]
+  adjacent(where: ZoneQuery): [Zone]
 }
 
 #--------- Elements ---------
@@ -177,6 +177,8 @@ type BuildingElement {
   type: String
   contains: [BuildingElement]
   partOf: [BuildingElement]
+  intersects(where: ElementQuery): [BuildingElement]
+  adjacent(where: ElementQuery): [BuildingElement]
   properties(pset: String): [Property]
 }
 

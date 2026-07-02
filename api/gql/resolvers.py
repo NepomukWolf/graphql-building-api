@@ -24,6 +24,7 @@ from api.ifc.helpers import (
 )
 from api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
 from api.ifc.geometry_service import GeometryRequest, geometry_service
+from api.ifc.topology import topology_service
 
 query = QueryType()
 model = ObjectType("Model")
@@ -190,6 +191,35 @@ def _all_model_zones(model_obj, ifc_type: str, where: dict | None = None) -> lis
     ]
 
 
+def _all_supported_zone_entities(
+    ifc_model: ifcopenshell.file,
+    where: dict | None = None,
+) -> list[ifcopenshell.entity_instance]:
+    search_value = _zone_query_search(where)
+    zones = []
+    for ifc_type in ("IfcBuilding", "IfcBuildingStorey", "IfcSpace"):
+        zones.extend(ifc_model.by_type(ifc_type))
+    return [zone_entity for zone_entity in zones if matches_search(zone_entity, search_value)]
+
+
+def _element_topology_candidates(
+    obj,
+    where: dict | None = None,
+) -> list[ifcopenshell.entity_instance]:
+    return _apply_element_query(
+        _ifc_model(obj),
+        list(_ifc_model(obj).by_type("IfcBuildingElement")),
+        where,
+    )
+
+
+def _zone_topology_candidates(
+    obj,
+    where: dict | None = None,
+) -> list[ifcopenshell.entity_instance]:
+    return _all_supported_zone_entities(_ifc_model(obj), where)
+
+
 @query.field("model")
 def resolve_model(_, info: GraphQLResolveInfo, name: str | None = None):
     return _model_context(info, name)
@@ -284,8 +314,22 @@ def resolve_zone_part_of(obj, _info: GraphQLResolveInfo):
     return _zone_parent(obj)
 
 
-def resolve_empty_zone_list(*_):
-    return []
+def resolve_zone_intersects(obj, _info: GraphQLResolveInfo, where: dict | None = None):
+    related = topology_service.intersects(
+        _ifc_model(obj),
+        _ifc_entity(obj),
+        _zone_topology_candidates(obj, where),
+    )
+    return [_with_model_context(zone_info(entity), obj) for entity in related]
+
+
+def resolve_zone_adjacent(obj, _info: GraphQLResolveInfo, where: dict | None = None):
+    related = topology_service.adjacent(
+        _ifc_model(obj),
+        _ifc_entity(obj),
+        _zone_topology_candidates(obj, where),
+    )
+    return [_with_model_context(zone_info(entity), obj) for entity in related]
 
 
 for zone_type in (building, storey, space):
@@ -293,8 +337,8 @@ for zone_type in (building, storey, space):
     zone_type.set_field("contains", resolve_zone_contains)
     zone_type.set_field("elements", resolve_zone_elements)
     zone_type.set_field("partOf", resolve_zone_part_of)
-    zone_type.set_field("intersects", resolve_empty_zone_list)
-    zone_type.set_field("adjacent", resolve_empty_zone_list)
+    zone_type.set_field("intersects", resolve_zone_intersects)
+    zone_type.set_field("adjacent", resolve_zone_adjacent)
 
 
 @building.field("storeys")
@@ -374,6 +418,34 @@ def resolve_element_part_of(obj, _info: GraphQLResolveInfo):
         return []
     parent = cast(ifcopenshell.entity_instance, parent)
     return [_with_model_context(element_info(parent), obj)]
+
+
+@building_element.field("intersects")
+def resolve_element_intersects(
+    obj,
+    _info: GraphQLResolveInfo,
+    where: dict | None = None,
+):
+    related = topology_service.intersects(
+        _ifc_model(obj),
+        _ifc_entity(obj),
+        _element_topology_candidates(obj, where),
+    )
+    return [_with_model_context(element_info(entity), obj) for entity in related]
+
+
+@building_element.field("adjacent")
+def resolve_element_adjacent(
+    obj,
+    _info: GraphQLResolveInfo,
+    where: dict | None = None,
+):
+    related = topology_service.adjacent(
+        _ifc_model(obj),
+        _ifc_entity(obj),
+        _element_topology_candidates(obj, where),
+    )
+    return [_with_model_context(element_info(entity), obj) for entity in related]
 
 
 @building_element.field("properties")

@@ -1,0 +1,8 @@
+query InvalidSelectorDemo {
+  model(name: "2026-SampleModel") {
+    elements(where: { selector: "???" }) {
+      guid
+      type
+    }
+  }
+}

@@ -177,6 +177,35 @@ query SelectorWalls {
 The selector is applied to the current candidate set, so it can be combined
 with `type`, `search`, and `filters`.
 
+**Query narrow topology relations:**
+
+```graphql
+query ElementTopology {
+  model(name: "2026-SampleModel") {
+    elements(where: { type: "Wall" }) {
+      guid
+      name
+      intersects(where: { type: "Door" }) {
+        guid
+        name
+        type
+      }
+      adjacent(where: { type: "Slab" }) {
+        guid
+        name
+        type
+      }
+    }
+  }
+}
+```
+
+Topology fields use IfcOpenShell geometry checks. `intersects` uses geometric
+intersection clashes, while `adjacent` uses a 5 cm clearance check. Results are
+based on direct element or zone geometry; building and storey topology may be
+empty when the IFC model does not provide direct geometry for those spatial
+entities.
+
 **Fetch one element by id and request inline OBJ:**
 
 ```graphql

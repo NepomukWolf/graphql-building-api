@@ -1,0 +1,26 @@
+query ExternalWallSelectorDemo {
+  model(name: "2026-SampleModel") {
+    elements(
+      where: {
+        type: "Wall"
+        filters: [EXTERNAL]
+        selector: "IfcWall"
+      }
+    ) {
+      guid
+      name
+      type
+      dataSheetURL
+      properties(pset: "Pset_WallCommon") {
+        name
+        value
+        pset
+      }
+      geometry(format: OBJ) {
+        url
+        extension
+        contentType
+      }
+    }
+  }
+}
