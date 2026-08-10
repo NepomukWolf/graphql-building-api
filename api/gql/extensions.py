@@ -11,6 +11,14 @@ def load_extensions(base_dir: Path) -> tuple[list[str], list[Any]]:
 
     An extension is any direct child directory containing a `schema.graphql`
     file. If a sibling `resolvers.py` exists, it may export `all_types`.
+
+    Args:
+        base_dir: Directory containing the extension directories.
+
+    Returns:
+        A tuple containing:
+        - Schema definitions read from the extensions `schema.graphql`.
+        - Ariadne bindables exported through each extensions `all_types`.
     """
     if not base_dir.is_dir():
         return [], []
@@ -57,4 +65,6 @@ def _load_module(extension_name: str, resolver_path: Path) -> ModuleType:
 
 
 def _module_safe_name(extension_name: str) -> str:
-    return "".join(char if char.isalnum() or char == "_" else "_" for char in extension_name)
+    return "".join(
+        char if char.isalnum() or char == "_" else "_" for char in extension_name
+    )
