@@ -3,6 +3,18 @@ type Query {
   models: [ModelInfo!]!
 }
 
+type Mutation {
+  updateProperty(input: UpdatePropertyInput!): BuildingElement
+}
+
+input UpdatePropertyInput {
+  model: String
+  guid: ID!
+  propertySet: String!
+  property: String!
+  value: JSON!
+}
+
 """
 Loaded IFC model entry point.
 """
