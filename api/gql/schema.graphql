@@ -220,6 +220,7 @@ type BuildingElement {
   intersects(where: ElementQuery): [BuildingElement]
   adjacent(where: ElementQuery): [BuildingElement]
   properties(pset: String): [Property]
+  materials: MaterialAssignment
 }
 
 """
@@ -289,3 +290,21 @@ type Geometry {
   extension: String
   contentType: String
 }
+
+type Material {
+  id: ID!
+  name: String!
+  category: String
+  properties: [Property]!
+}
+
+type MaterialLayer {
+  material: Material!
+  thickness: Float
+}
+
+type MaterialLayerSet {
+  layers: [MaterialLayer!]!
+}
+
+union MaterialAssignment = Material | MaterialLayerSet
