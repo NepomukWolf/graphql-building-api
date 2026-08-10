@@ -101,7 +101,8 @@ Each building element returned by the API provides at least the following fields
   - `url`: stable URL pointing to a pre-generated geometry file, when available
   - `payload`: inline geometry content read from file or generated dynamically
   - `encoding`, `format`, `extension`, and `contentType`: metadata for consuming the geometry
-- `properties(pset: String)`: common PSet values as `{ name, value, pset }`
+- `properties(pset: String)`: values from all property sets, or from one named
+  property set when `pset` is supplied, as `{ name, value, pset }`
 - `partOf` / `contains`: relationships to parent/children elements
 
 Supported geometry formats are `OBJ`, `GLB`, `GLTF`, `STL`, `STL_ASCII`,

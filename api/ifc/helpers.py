@@ -72,18 +72,18 @@ def get_parent(
     return parent
 
 
-def get_common_pset_name(entity: ifcopenshell.entity_instance) -> str:
-    return "Pset_" + entity.is_a()[3:] + "Common"
-
-
 def get_properties(
     entity: ifcopenshell.entity_instance, pset_name: str | None = None
 ) -> list[dict]:
-    pset_name = pset_name or get_common_pset_name(entity)
-    pset = el.get_pset(entity, pset_name) or {}
+    if pset_name is not None:
+        psets = {pset_name: el.get_pset(entity, pset_name) or {}}
+    else:
+        psets = el.get_psets(entity, psets_only=True)
+
     return [
         {"name": name, "value": value, "pset": pset_name}
-        for name, value in pset.items()
+        for pset_name, properties in psets.items()
+        for name, value in properties.items()
         if name != "id"
     ]
 
