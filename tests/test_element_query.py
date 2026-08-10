@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from graphql import GraphQLError
 
-from api.gql import resolvers
+from api.gql.resolvers.selection import apply_element_query
 from api.ifc.helpers import matches_element_filters
 
 
@@ -73,10 +73,10 @@ class ElementSelectorTests(unittest.TestCase):
         candidates = [wall_a, door, wall_b]
 
         with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
-            "api.gql.resolvers.selector.filter_elements",
+            "api.gql.resolvers.selection.selector.filter_elements",
             return_value={wall_b, wall_a},
         ) as filter_elements:
-            result = resolvers._apply_element_query(
+            result = apply_element_query(
                 object(),
                 candidates,
                 {"type": "Wall", "selector": "IfcWall"},
@@ -92,11 +92,11 @@ class ElementSelectorTests(unittest.TestCase):
         wall = FakeEntity("IfcWall", "wall")
 
         with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
-            "api.gql.resolvers.selector.filter_elements",
+            "api.gql.resolvers.selection.selector.filter_elements",
             side_effect=ValueError("bad selector"),
         ):
             with self.assertRaises(GraphQLError):
-                resolvers._apply_element_query(
+                apply_element_query(
                     object(),
                     [wall],
                     {"selector": "???"},

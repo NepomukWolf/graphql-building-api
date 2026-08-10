@@ -3,7 +3,8 @@ from __future__ import annotations
 import unittest
 from unittest.mock import patch
 
-from api.gql import resolvers
+from api.gql.resolvers.types.elements import resolve_element_intersects
+from api.gql.resolvers.types.zones import resolve_zone_adjacent
 from api.ifc.topology import BoundingBox, TopologyService, boxes_adjacent, boxes_intersect
 
 
@@ -134,10 +135,10 @@ class TopologyResolverTests(unittest.TestCase):
         }
 
         with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
-            "api.gql.resolvers.topology_service.intersects",
+            "api.gql.resolvers.types.elements.topology_service.intersects",
             return_value=[door],
         ) as intersects:
-            result = resolvers.resolve_element_intersects(
+            result = resolve_element_intersects(
                 obj,
                 None,
                 where={"type": "Door"},
@@ -162,10 +163,10 @@ class TopologyResolverTests(unittest.TestCase):
         }
 
         with patch(
-            "api.gql.resolvers.topology_service.adjacent",
+            "api.gql.resolvers.types.zones.topology_service.adjacent",
             return_value=[space_a],
         ) as adjacent:
-            result = resolvers.resolve_zone_adjacent(
+            result = resolve_zone_adjacent(
                 obj,
                 None,
                 where={"search": "Room A"},
