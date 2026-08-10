@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, cast
 
 from graphql import GraphQLError
@@ -8,11 +10,22 @@ import ifcopenshell.entity_instance
 import ifcopenshell.file
 
 
+@dataclass(frozen=True)
+class ModelContext:
+    name: str
+    model: ifcopenshell.file
+    geometry_base_url: str
+    geometry_elements_dir: Path
+
+
 def model_store(info: GraphQLResolveInfo):
     return info.context["ifc_models"]
 
 
-def model_context(info: GraphQLResolveInfo, model_name: str | None = None) -> dict:
+def load_model_context(
+    info: GraphQLResolveInfo,
+    model_name: str | None = None,
+) -> ModelContext:
     store = model_store(info)
     selected_name = store.model_folder_name(model_name)
     try:
@@ -26,20 +39,16 @@ def model_context(info: GraphQLResolveInfo, model_name: str | None = None) -> di
             f"or request one of the available models: {available}."
         ) from exc
 
-    return {
-        "_model_name": selected_name,
-        "_ifc_model": ifc_model_value,
-        "_geometry_base_url": (
+    return ModelContext(
+        name=selected_name,
+        model=ifc_model_value,
+        geometry_base_url=(
             info.context["models_base_url"] + f"{selected_name}/elements/"
         ),
-        "_geometry_elements_dir": (
+        geometry_elements_dir=(
             info.context["models_dir"] / selected_name / "elements"
         ),
-    }
-
-
-def ifc_model(obj: dict) -> ifcopenshell.file:
-    return obj["_ifc_model"]
+    )
 
 
 def ifc_entity(obj: Any) -> ifcopenshell.entity_instance:
@@ -47,13 +56,10 @@ def ifc_entity(obj: Any) -> ifcopenshell.entity_instance:
     return cast(ifcopenshell.entity_instance, entity)
 
 
-def with_model_context(obj: dict, model_obj: dict) -> dict:
-    obj.update(
-        {
-            "_model_name": model_obj["_model_name"],
-            "_ifc_model": model_obj["_ifc_model"],
-            "_geometry_base_url": model_obj["_geometry_base_url"],
-            "_geometry_elements_dir": model_obj["_geometry_elements_dir"],
-        }
-    )
+def get_model_context(obj: dict) -> ModelContext:
+    return cast(ModelContext, obj["_model_context"])
+
+
+def attach_model_context(obj: dict, context: ModelContext) -> dict:
+    obj["_model_context"] = context
     return obj

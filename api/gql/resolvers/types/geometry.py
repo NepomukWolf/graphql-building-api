@@ -3,7 +3,7 @@ from __future__ import annotations
 from ariadne import ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 
-from api.gql.resolvers.context import ifc_entity
+from api.gql.resolvers.context import get_model_context, ifc_entity
 from api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
 from api.ifc.geometry_service import GeometryRequest, geometry_service
 from api.ifc.helpers import get_entity_id
@@ -41,14 +41,15 @@ def resolve_geometry_context(
     source: str | None = None,
 ):
     entity = ifc_entity(obj)
+    context = get_model_context(obj)
     return {
         "_ifc": entity,
         "_guid": get_entity_id(entity),
         "_format": geometry_format(info, format),
         "_source": geometry_source(info, source),
         "_geometry_config": info.context["geometry_config"],
-        "_geometry_base_url": obj["_geometry_base_url"],
-        "_elements_dir": obj["_geometry_elements_dir"],
+        "_geometry_base_url": context.geometry_base_url,
+        "_elements_dir": context.geometry_elements_dir,
     }
 
 

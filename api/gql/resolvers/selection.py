@@ -5,7 +5,11 @@ import ifcopenshell.entity_instance
 import ifcopenshell.file
 import ifcopenshell.util.selector as selector
 
-from api.gql.resolvers.context import ifc_model, with_model_context
+from api.gql.resolvers.context import (
+    ModelContext,
+    attach_model_context,
+    get_model_context,
+)
 from api.ifc.helpers import (
     get_entity_id,
     matches_element_filters,
@@ -70,13 +74,13 @@ def zone_query_search(where: dict | None = None) -> str | None:
 
 
 def all_model_zones(
-    model_obj: dict,
+    context: ModelContext,
     ifc_type: str,
     where: dict | None = None,
 ) -> list[dict]:
     return [
-        with_model_context(zone_info(entity), model_obj)
-        for entity in ifc_model(model_obj).by_type(ifc_type)
+        attach_model_context(zone_info(entity), context)
+        for entity in context.model.by_type(ifc_type)
         if matches_search(entity, zone_query_search(where))
     ]
 
@@ -96,7 +100,7 @@ def element_topology_candidates(
     obj: dict,
     where: dict | None = None,
 ) -> list[ifcopenshell.entity_instance]:
-    model = ifc_model(obj)
+    model = get_model_context(obj).model
     return apply_element_query(
         model,
         list(model.by_type("IfcBuildingElement")),
@@ -108,4 +112,4 @@ def zone_topology_candidates(
     obj: dict,
     where: dict | None = None,
 ) -> list[ifcopenshell.entity_instance]:
-    return all_supported_zone_entities(ifc_model(obj), where)
+    return all_supported_zone_entities(get_model_context(obj).model, where)

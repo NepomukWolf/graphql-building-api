@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
+from api.gql.resolvers.context import ModelContext
 from api.gql.resolvers.types.elements import resolve_element_intersects
 from api.gql.resolvers.types.zones import resolve_zone_adjacent
 from api.ifc.topology import BoundingBox, TopologyService, boxes_adjacent, boxes_intersect
@@ -126,12 +128,15 @@ class TopologyResolverTests(unittest.TestCase):
         wall = FakeEntity("IfcWall", "wall")
         door = FakeEntity("IfcDoor", "door")
         model = FakeModel([source, wall, door])
+        context = ModelContext(
+            name="demo",
+            model=model,
+            geometry_base_url="http://example.test/models/demo/elements/",
+            geometry_elements_dir=Path("/tmp/elements"),
+        )
         obj = {
             "_ifc": source,
-            "_ifc_model": model,
-            "_model_name": "demo",
-            "_geometry_base_url": "http://example.test/models/demo/elements/",
-            "_geometry_elements_dir": "/tmp/elements",
+            "_model_context": context,
         }
 
         with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
@@ -147,6 +152,7 @@ class TopologyResolverTests(unittest.TestCase):
         candidates = intersects.call_args.args[2]
         self.assertEqual(candidates, [door])
         self.assertEqual(result[0]["guid"], "door")
+        self.assertIs(result[0]["_model_context"], context)
 
     def test_zone_adjacent_applies_zone_query_to_candidates(self):
         source = FakeEntity("IfcSpace", "source", "Room A")
@@ -154,12 +160,15 @@ class TopologyResolverTests(unittest.TestCase):
         space_b = FakeEntity("IfcSpace", "space-b", "Room B")
         building = FakeEntity("IfcBuilding", "building", "Building")
         model = FakeModel([source, space_a, space_b, building])
+        context = ModelContext(
+            name="demo",
+            model=model,
+            geometry_base_url="http://example.test/models/demo/elements/",
+            geometry_elements_dir=Path("/tmp/elements"),
+        )
         obj = {
             "_ifc": source,
-            "_ifc_model": model,
-            "_model_name": "demo",
-            "_geometry_base_url": "http://example.test/models/demo/elements/",
-            "_geometry_elements_dir": "/tmp/elements",
+            "_model_context": context,
         }
 
         with patch(
@@ -175,6 +184,7 @@ class TopologyResolverTests(unittest.TestCase):
         candidates = adjacent.call_args.args[2]
         self.assertEqual(candidates, [source, space_a])
         self.assertEqual(result[0]["id"], "space-a")
+        self.assertIs(result[0]["_model_context"], context)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,11 @@ from ariadne import ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 import ifcopenshell.entity_instance
 
-from api.gql.resolvers.context import ifc_entity, ifc_model, with_model_context
+from api.gql.resolvers.context import (
+    attach_model_context,
+    get_model_context,
+    ifc_entity,
+)
 from api.gql.resolvers.selection import element_topology_candidates
 from api.gql.resolvers.types.geometry import resolve_geometry_context
 from api.ifc.helpers import (
@@ -35,7 +39,7 @@ def resolve_element_geometry(
 def resolve_element_contains(obj, _info: GraphQLResolveInfo):
     entity = ifc_entity(obj)
     return [
-        with_model_context(element_info(child), obj)
+        attach_model_context(element_info(child), get_model_context(obj))
         for child in get_children(entity)
         if is_building_element(child)
     ]
@@ -47,7 +51,7 @@ def resolve_element_part_of(obj, _info: GraphQLResolveInfo):
     if not is_building_element(parent):
         return []
     parent = cast(ifcopenshell.entity_instance, parent)
-    return [with_model_context(element_info(parent), obj)]
+    return [attach_model_context(element_info(parent), get_model_context(obj))]
 
 
 @building_element.field("intersects")
@@ -56,12 +60,13 @@ def resolve_element_intersects(
     _info: GraphQLResolveInfo,
     where: dict | None = None,
 ):
+    context = get_model_context(obj)
     related = topology_service.intersects(
-        ifc_model(obj),
+        context.model,
         ifc_entity(obj),
         element_topology_candidates(obj, where),
     )
-    return [with_model_context(element_info(entity), obj) for entity in related]
+    return [attach_model_context(element_info(entity), context) for entity in related]
 
 
 @building_element.field("adjacent")
@@ -70,12 +75,13 @@ def resolve_element_adjacent(
     _info: GraphQLResolveInfo,
     where: dict | None = None,
 ):
+    context = get_model_context(obj)
     related = topology_service.adjacent(
-        ifc_model(obj),
+        context.model,
         ifc_entity(obj),
         element_topology_candidates(obj, where),
     )
-    return [with_model_context(element_info(entity), obj) for entity in related]
+    return [attach_model_context(element_info(entity), context) for entity in related]
 
 
 @building_element.field("properties")

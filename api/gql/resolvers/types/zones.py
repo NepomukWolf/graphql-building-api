@@ -6,7 +6,11 @@ from ariadne import InterfaceType, ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 import ifcopenshell.entity_instance
 
-from api.gql.resolvers.context import ifc_entity, ifc_model, with_model_context
+from api.gql.resolvers.context import (
+    attach_model_context,
+    get_model_context,
+    ifc_entity,
+)
 from api.gql.resolvers.selection import (
     all_model_zones,
     apply_element_query,
@@ -31,7 +35,7 @@ space = ObjectType("Space")
 
 def zone_children(obj) -> list[dict]:
     return [
-        with_model_context(zone_info(child), obj)
+        attach_model_context(zone_info(child), get_model_context(obj))
         for child in get_children(ifc_entity(obj))
         if is_zone(child)
     ]
@@ -42,7 +46,7 @@ def zone_parent(obj) -> list[dict]:
     if not is_zone(parent):
         return []
     parent = cast(ifcopenshell.entity_instance, parent)
-    return [with_model_context(zone_info(parent), obj)]
+    return [attach_model_context(zone_info(parent), get_model_context(obj))]
 
 
 def zone_elements(obj, where: dict | None = None) -> list[dict]:
@@ -51,8 +55,9 @@ def zone_elements(obj, where: dict | None = None) -> list[dict]:
         for child in get_children(ifc_entity(obj))
         if is_building_element(child)
     ]
-    elements = apply_element_query(ifc_model(obj), candidates, where)
-    return [with_model_context(element_info(element), obj) for element in elements]
+    context = get_model_context(obj)
+    elements = apply_element_query(context.model, candidates, where)
+    return [attach_model_context(element_info(element), context) for element in elements]
 
 
 @zone.type_resolver
@@ -84,21 +89,23 @@ def resolve_zone_part_of(obj, _info: GraphQLResolveInfo):
 
 
 def resolve_zone_intersects(obj, _info: GraphQLResolveInfo, where: dict | None = None):
+    context = get_model_context(obj)
     related = topology_service.intersects(
-        ifc_model(obj),
+        context.model,
         ifc_entity(obj),
         zone_topology_candidates(obj, where),
     )
-    return [with_model_context(zone_info(entity), obj) for entity in related]
+    return [attach_model_context(zone_info(entity), context) for entity in related]
 
 
 def resolve_zone_adjacent(obj, _info: GraphQLResolveInfo, where: dict | None = None):
+    context = get_model_context(obj)
     related = topology_service.adjacent(
-        ifc_model(obj),
+        context.model,
         ifc_entity(obj),
         zone_topology_candidates(obj, where),
     )
-    return [with_model_context(zone_info(entity), obj) for entity in related]
+    return [attach_model_context(zone_info(entity), context) for entity in related]
 
 
 for zone_type in (building, storey, space):
@@ -112,19 +119,19 @@ for zone_type in (building, storey, space):
 
 @building.field("storeys")
 def resolve_building_storeys(obj, _info: GraphQLResolveInfo):
-    return all_model_zones(obj, "IfcBuildingStorey")
+    return all_model_zones(get_model_context(obj), "IfcBuildingStorey")
 
 
 @building.field("spaces")
 def resolve_building_spaces(obj, _info: GraphQLResolveInfo):
-    return all_model_zones(obj, "IfcSpace")
+    return all_model_zones(get_model_context(obj), "IfcSpace")
 
 
 @storey.field("spaces")
 def resolve_storey_spaces(obj, _info: GraphQLResolveInfo):
     entity = ifc_entity(obj)
     return [
-        with_model_context(zone_info(child), obj)
+        attach_model_context(zone_info(child), get_model_context(obj))
         for child in get_children(entity)
         if child.is_a("IfcSpace")
     ]
