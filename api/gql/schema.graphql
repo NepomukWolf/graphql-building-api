@@ -5,6 +5,7 @@ type Query {
 
 type Mutation {
   updateProperty(input: UpdatePropertyInput!): BuildingElement
+  patchProperties(input: PatchPropertiesInput!): BuildingElement
 }
 
 input UpdatePropertyInput {
@@ -13,6 +14,33 @@ input UpdatePropertyInput {
   propertySet: String!
   property: String!
   value: JSON!
+}
+
+"""
+Input for applying a property-set merge patch to an IFC entity.
+
+`patch` is an object whose top-level keys are property-set names. An object
+value creates or patches that property set, while `null` deletes it. Within a
+property-set object, non-null values create or update properties and `null`
+deletes properties.
+
+For example:
+
+```
+{
+  "Pset_WallCommon": {
+    "IsExternal": true,
+    "Reference": null
+  },
+  "Obsolete_PropertySet": null
+}
+```
+"""
+input PatchPropertiesInput {
+  model: String
+  guid: ID!
+  includeInherited: Boolean! = false
+  patch: JSON!
 }
 
 """
