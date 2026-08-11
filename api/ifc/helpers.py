@@ -73,7 +73,9 @@ def get_parent(
 
 
 def get_properties(
-    entity: ifcopenshell.entity_instance, pset_name: str | None = None
+    entity: ifcopenshell.entity_instance,
+    pset_name: str | None = None,
+    property_name: str | None = None,
 ) -> list[dict]:
     if pset_name is not None:
         psets = {pset_name: el.get_pset(entity, pset_name) or {}}
@@ -84,7 +86,7 @@ def get_properties(
         {"name": name, "value": value, "pset": pset_name}
         for pset_name, properties in psets.items()
         for name, value in properties.items()
-        if name != "id"
+        if name != "id" and (property_name is None or name == property_name)
     ]
 
 

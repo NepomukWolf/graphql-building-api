@@ -219,7 +219,12 @@ type BuildingElement {
   partOf: [BuildingElement]
   intersects(where: ElementQuery): [BuildingElement]
   adjacent(where: ElementQuery): [BuildingElement]
-  properties(pset: String): [Property]
+  properties(
+    """Exact property-set name to include."""
+    pset: String
+    """Exact property name to include."""
+    name: String
+  ): [Property]
   materials: MaterialAssignment
 }
 
@@ -295,7 +300,12 @@ type Material {
   id: ID!
   name: String!
   category: String
-  properties: [Property]!
+  properties(
+    """Exact material property-set name to include."""
+    pset: String
+    """Exact material property name to include."""
+    name: String
+  ): [Property]!
 }
 
 type MaterialLayer {

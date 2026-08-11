@@ -124,6 +124,51 @@ class MaterialResolverTests(unittest.TestCase):
             },
         )
 
+    def test_material_properties_support_pset_and_name_filters(self):
+        concrete = add_material(self.model, name="Concrete")
+        density = self.model.create_entity(
+            "IfcPropertySingleValue",
+            Name="Density",
+            NominalValue=self.model.create_entity("IfcReal", 2400.0),
+        )
+        conductivity = self.model.create_entity(
+            "IfcPropertySingleValue",
+            Name="Conductivity",
+            NominalValue=self.model.create_entity("IfcReal", 1.7),
+        )
+        self.model.create_entity(
+            "IfcMaterialProperties",
+            Name="MaterialData",
+            Properties=[density, conductivity],
+            Material=concrete,
+        )
+        assign_material(
+            self.model,
+            products=[self.wall],
+            type="IfcMaterial",
+            material=concrete,
+        )
+
+        result = self.query(
+            """
+            ... on Material {
+              properties(pset: "MaterialData", name: "Density") {
+                name value pset
+              }
+            }
+            """
+        )
+
+        self.assertEqual(
+            self.assignment(result),
+            {
+                "__typename": "Material",
+                "properties": [
+                    {"name": "Density", "value": 2400.0, "pset": "MaterialData"}
+                ],
+            },
+        )
+
     def test_layer_set_preserves_order_thickness_and_missing_materials(self):
         outside = add_material(self.model, name="Outside")
         inside = add_material(self.model, name="Inside")

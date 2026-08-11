@@ -7,10 +7,14 @@ from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import api.app as app_module
+from api.config import CONFIG
 from api.ifc.models import IfcModelStore
 
 
 class IfcModelStoreTests(unittest.TestCase):
+    def test_repository_default_model_is_the_sample_model(self):
+        self.assertEqual(CONFIG.default_model, "2026-SampleModel")
+
     def test_empty_models_directory_constructs_and_lists_no_models(self):
         with TemporaryDirectory() as temp_dir:
             store = IfcModelStore(Path(temp_dir), "example-model")

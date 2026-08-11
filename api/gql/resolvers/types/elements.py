@@ -90,8 +90,9 @@ def resolve_element_properties(
     obj,
     _info: GraphQLResolveInfo,
     pset: str | None = None,
+    name: str | None = None,
 ):
-    return get_properties(ifc_entity(obj), pset)
+    return get_properties(ifc_entity(obj), pset, name)
 
 
 @building_element.field("materials")

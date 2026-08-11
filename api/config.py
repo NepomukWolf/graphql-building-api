@@ -20,7 +20,7 @@ class GeometryConfig:
 
 @dataclass(frozen=True)
 class AppConfig:
-    default_model: str = "example-model"
+    default_model: str = "2026-SampleModel"
     default_port: int = 5050
     geometry: GeometryConfig = GeometryConfig()
 
@@ -52,7 +52,7 @@ def load_config() -> AppConfig:
     )
 
     return AppConfig(
-        default_model=raw_config.get("default_model", "example-model"),
+        default_model=raw_config.get("default_model", "2026-SampleModel"),
         default_port=raw_config.get("default_port", 5050),
         geometry=geometry,
     )

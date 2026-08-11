@@ -135,8 +135,13 @@ def resolve_material_category(obj, _info: GraphQLResolveInfo):
 
 
 @material.field("properties")
-def resolve_material_properties(obj, _info: GraphQLResolveInfo):
-    return get_properties(ifc_entity(obj))
+def resolve_material_properties(
+    obj,
+    _info: GraphQLResolveInfo,
+    pset: str | None = None,
+    name: str | None = None,
+):
+    return get_properties(ifc_entity(obj), pset, name)
 
 
 @material_layer.field("material")

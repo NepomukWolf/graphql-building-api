@@ -32,11 +32,12 @@ model folders under `api/static/models/` are intentionally ignored by git.
 Use this folder layout for your own IFC files:
 
 ```text
-api/static/models/example-model/example-model.ifc
+api/static/models/2026-SampleModel/2026-SampleModel.ifc
 ```
 
-The folder name and IFC filename must match. Replace `example-model` with your
-own model name, or set `DEFAULT_MODEL` when starting the server.
+The folder name and IFC filename must match. `2026-SampleModel` is the configured
+default; use another matching folder and filename or set `DEFAULT_MODEL` when
+starting the server to select a different default.
 
 ## Quickstart
 
@@ -47,8 +48,8 @@ Once the python environment is setup and activated, you can proceed with the fol
    For the default configuration:
 
    ```shell
-   mkdir -p api/static/models/example-model
-   cp /path/to/your/model.ifc api/static/models/example-model/example-model.ifc
+   mkdir -p api/static/models/2026-SampleModel
+   cp /path/to/your/model.ifc api/static/models/2026-SampleModel/2026-SampleModel.ifc
    ```
 
    To use a different startup model, set `DEFAULT_MODEL` to the folder/model name:
@@ -60,7 +61,7 @@ Once the python environment is setup and activated, you can proceed with the fol
 2. **Pre-generate geometry model:** There is a small CLI to extract and save element-wise geometry for an IFC model. Example usage:
 
    ```shell
-   uv run python -m scripts.generate_geometry api/static/models/example-model/example-model.ifc --formats OBJ GLB GLTF WKT STL
+   uv run python -m scripts.generate_geometry api/static/models/2026-SampleModel/2026-SampleModel.ifc --formats OBJ GLB GLTF WKT STL
    ```
 
    The generated geometry files will be located at `api/static/models/<model name>/elements/<element guid>/`.
@@ -101,8 +102,9 @@ Each building element returned by the API provides at least the following fields
   - `url`: stable URL pointing to a pre-generated geometry file, when available
   - `payload`: inline geometry content read from file or generated dynamically
   - `encoding`, `format`, `extension`, and `contentType`: metadata for consuming the geometry
-- `properties(pset: String)`: values from all property sets, or from one named
-  property set when `pset` is supplied, as `{ name, value, pset }`
+- `properties(pset: String, name: String)`: values from all property sets,
+  optionally restricted by exact property-set and/or property names, as
+  `{ name, value, pset }`
 - `partOf` / `contains`: relationships to parent/children elements
 
 Supported geometry formats are `OBJ`, `GLB`, `GLTF`, `STL`, `STL_ASCII`,
@@ -171,14 +173,15 @@ This query returns a list of wall elements with URLs pointing to static geometry
 
 ```graphql
 query ExternalWalls {
-  model(name: "example-model") {
+  model {
     elements(where: { type: "Wall", filters: [EXTERNAL] }) {
       guid
       name
       type
-      properties(pset: "Pset_WallCommon") {
+      properties(pset: "Pset_WallCommon", name: "IsExternal") {
         name
         value
+        pset
       }
     }
   }
