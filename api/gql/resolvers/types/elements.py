@@ -13,6 +13,7 @@ from api.gql.resolvers.context import (
 )
 from api.gql.resolvers.selection import element_topology_candidates
 from api.gql.resolvers.types.geometry import resolve_geometry_context
+from api.gql.resolvers.types.materials import resolve_material_assignment
 from api.ifc.helpers import (
     element_info,
     get_children,
@@ -91,3 +92,8 @@ def resolve_element_properties(
     pset: str | None = None,
 ):
     return get_properties(ifc_entity(obj), pset)
+
+
+@building_element.field("materials")
+def resolve_element_materials(obj, _info: GraphQLResolveInfo):
+    return resolve_material_assignment(obj)

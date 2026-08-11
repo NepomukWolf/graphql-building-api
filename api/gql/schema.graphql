@@ -299,7 +299,7 @@ type Material {
 }
 
 type MaterialLayer {
-  material: Material!
+  material: Material
   thickness: Float
 }
 
