@@ -10,7 +10,14 @@ if __package__ is None or __package__ == "":
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from api.config import API_DIR, DEFAULT_MODEL, DEFAULT_PORT, GEOMETRY_CONFIG, MODELS_DIR
+from api.config import (
+    API_DIR,
+    DEFAULT_MODEL,
+    DEFAULT_PORT,
+    DISABLED_EXTENSIONS,
+    GEOMETRY_CONFIG,
+    MODELS_DIR,
+)
 from api.gql.extensions import load_extensions
 from api.gql.resolvers import all_types
 from api.ifc.models import IfcModelStore
@@ -22,7 +29,10 @@ logging.basicConfig(level=logging.INFO)
 
 # Construct the executable schema
 type_defs = load_schema_from_path(str(API_DIR / "gql" / "schema.graphql"))
-extension_type_defs, extension_types = load_extensions(API_DIR / "extensions")
+extension_type_defs, extension_types = load_extensions(
+    API_DIR / "extensions",
+    disabled=DISABLED_EXTENSIONS,
+)
 schema = make_executable_schema(
     [type_defs, *extension_type_defs],
     *all_types,

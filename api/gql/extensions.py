@@ -3,10 +3,13 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, Collection
 
 
-def load_extensions(base_dir: Path) -> tuple[list[str], list[Any]]:
+def load_extensions(
+    base_dir: Path,
+    disabled: Collection[str] = (),
+) -> tuple[list[str], list[Any]]:
     """Load GraphQL schema fragments and optional Ariadne bindables.
 
     An extension is any direct child directory containing a `schema.graphql`
@@ -14,6 +17,7 @@ def load_extensions(base_dir: Path) -> tuple[list[str], list[Any]]:
 
     Args:
         base_dir: Directory containing the extension directories.
+        disabled: Extension directory names that should not be loaded.
 
     Returns:
         A tuple containing:
@@ -26,7 +30,10 @@ def load_extensions(base_dir: Path) -> tuple[list[str], list[Any]]:
     schemas: list[str] = []
     bindables: list[Any] = []
 
+    disabled_names = set(disabled)
     for extension_dir in sorted(path for path in base_dir.iterdir() if path.is_dir()):
+        if extension_dir.name in disabled_names:
+            continue
         schema_path = extension_dir / "schema.graphql"
         if not schema_path.is_file():
             continue

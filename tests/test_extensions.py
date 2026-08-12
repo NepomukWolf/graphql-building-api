@@ -93,9 +93,33 @@ class ExtensionLoaderTests(unittest.TestCase):
         self.assertEqual(schemas, [])
         self.assertEqual(bindables, [])
 
+    def test_skips_disabled_extension_directory(self):
+        with TemporaryDirectory() as temp_dir:
+            base_dir = Path(temp_dir)
+            enabled = base_dir / "enabled"
+            disabled = base_dir / "disabled"
+            enabled.mkdir()
+            disabled.mkdir()
+            (enabled / "schema.graphql").write_text(
+                "extend type Query { enabled: String }\n",
+                encoding="utf-8",
+            )
+            (disabled / "schema.graphql").write_text(
+                "extend type Query { disabled: String }\n",
+                encoding="utf-8",
+            )
+
+            schemas, bindables = load_extensions(base_dir, disabled={"disabled"})
+
+            self.assertEqual(schemas, ["extend type Query { enabled: String }\n"])
+            self.assertEqual(bindables, [])
+
     def test_shipped_lca_extension_resolves_data_sheet_url(self):
         project_root = Path(__file__).resolve().parents[1]
-        schemas, bindables = load_extensions(project_root / "api" / "extensions")
+        schemas, bindables = load_extensions(
+            project_root / "api" / "extensions",
+            disabled={"geometry_representations"},
+        )
         query = QueryType()
 
         @query.field("element")

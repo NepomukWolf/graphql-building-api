@@ -135,6 +135,14 @@ At startup, the server automatically loads GraphQL extensions from
 treated as an extension. A folder may also include `resolvers.py` exporting
 `all_types`, a list of Ariadne bindables such as `ObjectType` instances.
 
+Extensions are enabled by default. A server can omit individual extensions
+from its schema by listing their directory names in `config.toml`:
+
+```toml
+[extensions]
+disabled = ["geometry_representations"]
+```
+
 ```text
 api/extensions/my-extension/
   schema.graphql
@@ -143,7 +151,41 @@ api/extensions/my-extension/
 
 The prototype includes `api/extensions/lca-extension/`, which extends
 `BuildingElement` with `dataSheetURL` and resolves deterministic demo URLs for
-common element types.
+common element types. The `geometry_representations` extension adds normalized
+structured IFC extrusions to the core geometry facade. It currently supports
+rectangle and circle profiles; unsupported representation items are omitted.
+
+```graphql
+query StructuredGeometry {
+  model(name: "duplex_arch") {
+    elements(where: { type: "Wall" }) {
+      guid
+      geometry {
+        representations {
+          __typename
+          identifier
+          placement { matrix }
+          ... on ExtrusionRepresentation {
+            depth
+            direction { x y z }
+            profile {
+              __typename
+              name
+              ... on RectangleProfile { width height }
+              ... on CircleProfile { radius }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Representation placement matrices contain 16 row-major values and transform
+primitive-local coordinates into model coordinates. Translation is stored at
+indices 3, 7, and 11 in metres. The parent geometry field's `format` and
+`source` arguments affect artifact fields only, not `representations`.
 
 ### Example Queries
 

@@ -13,3 +13,7 @@ allow_dynamic_generation = true
 
 # Whether dynamically generated geometry is written to api/static/models.
 cache_generated = false
+
+[extensions]
+# Extension directory names that should not be loaded into the GraphQL schema.
+disabled = []

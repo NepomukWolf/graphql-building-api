@@ -1,0 +1,59 @@
+extend type Geometry {
+  """
+  Authored IFC geometry items that this extension can represent structurally.
+
+  This list is independent of the format and source arguments on the parent
+  geometry field. Unsupported representation items are omitted.
+  """
+  representations: [GeometryRepresentation!]!
+}
+
+interface GeometryRepresentation {
+  """Identifier of the containing IFC shape representation, such as Body."""
+  identifier: String
+
+  """
+  Row-major matrix mapping primitive-local coordinates into model coordinates.
+  Translation occupies indices 3, 7, and 11 and is expressed in metres.
+  """
+  placement: Transform!
+}
+
+type ExtrusionRepresentation implements GeometryRepresentation {
+  identifier: String
+  placement: Transform!
+  profile: Profile!
+  """Extrusion depth in metres."""
+  depth: Float!
+  """Normalized extrusion direction in primitive-local coordinates."""
+  direction: Vector3!
+}
+
+interface Profile {
+  name: String
+}
+
+type RectangleProfile implements Profile {
+  name: String
+  """Profile width in metres."""
+  width: Float!
+  """Profile height in metres."""
+  height: Float!
+}
+
+type CircleProfile implements Profile {
+  name: String
+  """Profile radius in metres."""
+  radius: Float!
+}
+
+type Vector3 {
+  x: Float!
+  y: Float!
+  z: Float!
+}
+
+type Transform {
+  """Exactly 16 row-major values."""
+  matrix: [Float!]!
+}

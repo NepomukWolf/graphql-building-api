@@ -23,6 +23,7 @@ class AppConfig:
     default_model: str = "2026-SampleModel"
     default_port: int = 5050
     geometry: GeometryConfig = GeometryConfig()
+    disabled_extensions: tuple[str, ...] = ()
 
 
 def _load_toml_config() -> dict:
@@ -43,6 +44,7 @@ def _normalize_source(value: str | None) -> str:
 def load_config() -> AppConfig:
     raw_config = _load_toml_config()
     raw_geometry = raw_config.get("geometry", {})
+    raw_extensions = raw_config.get("extensions", {})
 
     geometry = GeometryConfig(
         default_source=_normalize_source(raw_geometry.get("default_source", "file")),
@@ -55,6 +57,7 @@ def load_config() -> AppConfig:
         default_model=raw_config.get("default_model", "2026-SampleModel"),
         default_port=raw_config.get("default_port", 5050),
         geometry=geometry,
+        disabled_extensions=tuple(raw_extensions.get("disabled", [])),
     )
 
 
@@ -63,3 +66,4 @@ CONFIG = load_config()
 DEFAULT_MODEL = os.environ.get("DEFAULT_MODEL", CONFIG.default_model)
 DEFAULT_PORT = int(os.environ.get("PORT", CONFIG.default_port))
 GEOMETRY_CONFIG = CONFIG.geometry
+DISABLED_EXTENSIONS = CONFIG.disabled_extensions
