@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 
 from ariadne import QueryType, graphql_sync, make_executable_schema
 
-from api.gql.extensions import load_extensions
+from graphql_building_api.gql.extensions import load_extensions
 
 
 class ExtensionLoaderTests(unittest.TestCase):
@@ -117,7 +117,7 @@ class ExtensionLoaderTests(unittest.TestCase):
     def test_shipped_lca_extension_resolves_data_sheet_url(self):
         project_root = Path(__file__).resolve().parents[1]
         schemas, bindables = load_extensions(
-            project_root / "api" / "extensions",
+            project_root / "graphql_building_api" / "extensions",
             disabled={"geometry_representations"},
         )
         query = QueryType()

@@ -8,13 +8,13 @@ from graphql.type.definition import GraphQLResolveInfo
 import ifcopenshell.entity_instance
 import ifcopenshell.util.element as el
 
-from api.gql.resolvers.context import (
+from graphql_building_api.gql.resolvers.context import (
     ModelContext,
     attach_model_context,
     get_model_context,
     ifc_entity,
 )
-from api.ifc.helpers import get_entity_id, get_properties
+from graphql_building_api.ifc.helpers import get_entity_id, get_properties
 
 material = ObjectType("Material")
 material_layer = ObjectType("MaterialLayer")

@@ -6,9 +6,9 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
-import api.app as app_module
-from api.config import CONFIG
-from api.ifc.models import IfcModelStore
+import graphql_building_api.app as app_module
+from graphql_building_api.config import CONFIG
+from graphql_building_api.ifc.models import IfcModelStore
 
 
 class IfcModelStoreTests(unittest.TestCase):
@@ -56,7 +56,7 @@ class IfcModelStoreTests(unittest.TestCase):
             model_path.write_text("ISO-10303-21;", encoding="utf-8")
             store = IfcModelStore(models_dir, "example-model")
 
-            with patch("api.ifc.models.ifcopenshell.open", return_value="loaded") as open_ifc:
+            with patch("graphql_building_api.ifc.models.ifcopenshell.open", return_value="loaded") as open_ifc:
                 self.assertEqual(store.get("my-model"), "loaded")
 
             open_ifc.assert_called_once_with(str(model_path))

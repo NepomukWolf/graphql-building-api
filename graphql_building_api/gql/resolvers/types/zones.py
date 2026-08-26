@@ -6,18 +6,18 @@ from ariadne import InterfaceType, ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 import ifcopenshell.entity_instance
 
-from api.gql.resolvers.context import (
+from graphql_building_api.gql.resolvers.context import (
     attach_model_context,
     get_model_context,
     ifc_entity,
 )
-from api.gql.resolvers.selection import (
+from graphql_building_api.gql.resolvers.selection import (
     all_model_zones,
     apply_element_query,
     zone_topology_candidates,
 )
-from api.gql.resolvers.types.geometry import resolve_geometry_context
-from api.ifc.helpers import (
+from graphql_building_api.gql.resolvers.types.geometry import resolve_geometry_context
+from graphql_building_api.ifc.helpers import (
     element_info,
     get_children,
     get_parent,
@@ -25,7 +25,7 @@ from api.ifc.helpers import (
     is_zone,
     zone_info,
 )
-from api.ifc.topology import topology_service
+from graphql_building_api.ifc.topology import topology_service
 
 zone = InterfaceType("Zone")
 building = ObjectType("Building")

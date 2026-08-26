@@ -8,8 +8,8 @@ import ifcopenshell
 from ifcopenshell.api.pset import add_pset, edit_pset
 from ifcopenshell.api.root import create_entity
 
-from api.ifc.helpers import get_properties
-from api.app import schema
+from graphql_building_api.ifc.helpers import get_properties
+from graphql_building_api.app import schema
 
 
 class InMemoryModelStore:

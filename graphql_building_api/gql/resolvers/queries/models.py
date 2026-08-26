@@ -3,7 +3,7 @@ from __future__ import annotations
 from ariadne import QueryType
 from graphql.type.definition import GraphQLResolveInfo
 
-from api.gql.resolvers.context import load_model_context, model_store
+from graphql_building_api.gql.resolvers.context import load_model_context, model_store
 
 model_queries = QueryType()
 

@@ -1,4 +1,3 @@
-from ariadne import load_schema_from_path, make_executable_schema, graphql_sync
 from flask import Flask, jsonify, request, url_for
 from flask_cors import CORS
 import json
@@ -10,7 +9,7 @@ if __package__ is None or __package__ == "":
 
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from api.config import (
+from graphql_building_api.config import (
     API_DIR,
     DEFAULT_MODEL,
     DEFAULT_PORT,
@@ -18,9 +17,11 @@ from api.config import (
     GEOMETRY_CONFIG,
     MODELS_DIR,
 )
-from api.gql.extensions import load_extensions
-from api.gql.resolvers import all_types
-from api.ifc.models import IfcModelStore
+from graphql_building_api.execution import (
+    build_building_schema,
+    execute_building_graphql,
+)
+from graphql_building_api.ifc.models import IfcModelStore
 
 # Server Setup
 app = Flask(__name__, static_url_path="", static_folder=str(API_DIR / "static"))
@@ -28,15 +29,9 @@ CORS(app, resources={r"/graphql": {"origins": "*"}})  # Adjust origins as needed
 logging.basicConfig(level=logging.INFO)
 
 # Construct the executable schema
-type_defs = load_schema_from_path(str(API_DIR / "gql" / "schema.graphql"))
-extension_type_defs, extension_types = load_extensions(
-    API_DIR / "extensions",
-    disabled=DISABLED_EXTENSIONS,
-)
-schema = make_executable_schema(
-    [type_defs, *extension_type_defs],
-    *all_types,
-    *extension_types,
+schema = build_building_schema(
+    api_dir=API_DIR,
+    disabled_extensions=DISABLED_EXTENSIONS,
 )
 
 # Load IFC model once (on server start)
@@ -94,27 +89,15 @@ def _decode_json_arg(value):
 
 
 def execute_graphql(data):
-    requested_format = None
-
-    # Read GraphQL variables
-    if isinstance(data, dict):
-        variables = data.get("variables") or {}
-        requested_format = variables.get("format")
-
-    # Actual GrahpQL execution
-    success, result = graphql_sync(
+    result, status_code = execute_building_graphql(
         schema,
         data,
-        context_value={
-            "ifc_models": ifc_models,
-            "models_dir": MODELS_DIR,
-            "models_base_url": url_for("static", filename="models/", _external=True),
-            "geometry_format": (requested_format or "obj"),
-            "geometry_config": GEOMETRY_CONFIG,
-        },
+        model_store=ifc_models,
+        models_dir=MODELS_DIR,
+        models_base_url=url_for("static", filename="models/", _external=True),
+        geometry_config=GEOMETRY_CONFIG,
         debug=app.debug,
     )
-    status_code = 200 if success else 400
     return jsonify(result), status_code
 
 

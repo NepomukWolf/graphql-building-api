@@ -9,12 +9,12 @@ from ifcopenshell.api.pset import add_pset, edit_pset, remove_pset
 from ifcopenshell.entity_instance import entity_instance
 from ifcopenshell.util.element import get_pset, get_type
 
-from api.gql.resolvers.context import (
+from graphql_building_api.gql.resolvers.context import (
     ModelContext,
     attach_model_context,
     load_model_context,
 )
-from api.ifc.helpers import element_info
+from graphql_building_api.ifc.helpers import element_info
 
 
 class OptionalModelInput(TypedDict, total=False):

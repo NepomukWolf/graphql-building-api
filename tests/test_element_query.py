@@ -5,8 +5,8 @@ from unittest.mock import patch
 
 from graphql import GraphQLError
 
-from api.gql.resolvers.selection import apply_element_query
-from api.ifc.helpers import matches_element_filters
+from graphql_building_api.gql.resolvers.selection import apply_element_query
+from graphql_building_api.ifc.helpers import matches_element_filters
 
 
 class FakeEntity:
@@ -25,7 +25,7 @@ class ElementFilterTests(unittest.TestCase):
     def test_external_internal_and_load_bearing_filters_match_explicit_booleans(self):
         entity = FakeEntity("IfcWall", "wall")
         with patch(
-            "api.ifc.helpers.el.get_psets",
+            "graphql_building_api.ifc.helpers.el.get_psets",
             return_value={
                 "Pset_WallCommon": {
                     "id": 1,
@@ -42,7 +42,7 @@ class ElementFilterTests(unittest.TestCase):
     def test_internal_filter_matches_explicit_false(self):
         entity = FakeEntity("IfcWall", "wall")
         with patch(
-            "api.ifc.helpers.el.get_psets",
+            "graphql_building_api.ifc.helpers.el.get_psets",
             return_value={"Pset_WallCommon": {"IsExternal": False}},
         ):
             self.assertTrue(matches_element_filters(entity, ["INTERNAL"]))
@@ -50,7 +50,7 @@ class ElementFilterTests(unittest.TestCase):
 
     def test_missing_properties_do_not_match_semantic_filters(self):
         entity = FakeEntity("IfcWall", "wall")
-        with patch("api.ifc.helpers.el.get_psets", return_value={}):
+        with patch("graphql_building_api.ifc.helpers.el.get_psets", return_value={}):
             self.assertFalse(matches_element_filters(entity, ["EXTERNAL"]))
             self.assertFalse(matches_element_filters(entity, ["INTERNAL"]))
             self.assertFalse(matches_element_filters(entity, ["LOAD_BEARING"]))
@@ -59,7 +59,7 @@ class ElementFilterTests(unittest.TestCase):
     def test_fire_rated_filter_matches_non_empty_fire_rating(self):
         entity = FakeEntity("IfcDoor", "door")
         with patch(
-            "api.ifc.helpers.el.get_psets",
+            "graphql_building_api.ifc.helpers.el.get_psets",
             return_value={"Pset_DoorCommon": {"FireRating": "EI30"}},
         ):
             self.assertTrue(matches_element_filters(entity, ["FIRE_RATED"]))
@@ -72,8 +72,8 @@ class ElementSelectorTests(unittest.TestCase):
         door = FakeEntity("IfcDoor", "door", "Door")
         candidates = [wall_a, door, wall_b]
 
-        with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
-            "api.gql.resolvers.selection.selector.filter_elements",
+        with patch("graphql_building_api.ifc.helpers.el.get_psets", return_value={}), patch(
+            "graphql_building_api.gql.resolvers.selection.selector.filter_elements",
             return_value={wall_b, wall_a},
         ) as filter_elements:
             result = apply_element_query(
@@ -91,8 +91,8 @@ class ElementSelectorTests(unittest.TestCase):
     def test_invalid_selector_raises_graphql_error(self):
         wall = FakeEntity("IfcWall", "wall")
 
-        with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
-            "api.gql.resolvers.selection.selector.filter_elements",
+        with patch("graphql_building_api.ifc.helpers.el.get_psets", return_value={}), patch(
+            "graphql_building_api.gql.resolvers.selection.selector.filter_elements",
             side_effect=ValueError("bad selector"),
         ):
             with self.assertRaises(GraphQLError):

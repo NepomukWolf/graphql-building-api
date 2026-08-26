@@ -18,5 +18,15 @@ dependencies = [
     "trimesh>=4.9.0",
 ]
 
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["graphql_building_api*"]
+
+[tool.setuptools.package-data]
+graphql_building_api = ["gql/*.graphql", "extensions/**/*.graphql"]
+
 [tool.pyright]
 typeCheckingMode = "basic"

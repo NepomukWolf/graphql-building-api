@@ -13,8 +13,8 @@ from ifcopenshell.api.root import create_entity
 from ifcopenshell.api.type import assign_type
 from ifcopenshell.util.element import get_pset
 
-from api.app import schema
-from api.gql.resolvers.mutations.properties import resolve_patch_properties
+from graphql_building_api.app import schema
+from graphql_building_api.gql.resolvers.mutations.properties import resolve_patch_properties
 
 
 class InMemoryModelStore:
@@ -170,7 +170,7 @@ class PropertyPatchMutationTests(unittest.TestCase):
             )
 
         with patch(
-            "api.gql.resolvers.mutations.properties.edit_pset",
+            "graphql_building_api.gql.resolvers.mutations.properties.edit_pset",
             side_effect=edit_or_fail,
         ), self.assertRaises(GraphQLError):
             self.patch(

@@ -61,7 +61,7 @@ def _load_extension_bindables(extension_dir: Path) -> list[Any]:
 
 
 def _load_module(extension_name: str, resolver_path: Path) -> ModuleType:
-    module_name = f"api.extensions.{_module_safe_name(extension_name)}.resolvers"
+    module_name = f"graphql_building_api.extensions.{_module_safe_name(extension_name)}.resolvers"
     spec = importlib.util.spec_from_file_location(module_name, resolver_path)
     if spec is None or spec.loader is None:
         raise ImportError(f"Could not load extension resolver module: {resolver_path}")

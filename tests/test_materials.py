@@ -19,7 +19,7 @@ from ifcopenshell.api.material import (
 from ifcopenshell.api.root import create_entity
 from ifcopenshell.api.type import assign_type
 
-from api.app import schema
+from graphql_building_api.app import schema
 
 
 class InMemoryModelStore:
@@ -448,7 +448,7 @@ class MaterialResolverTests(unittest.TestCase):
         logging.disable(logging.ERROR)
         try:
             with patch(
-                "api.gql.resolvers.types.materials.el.get_material",
+                "graphql_building_api.gql.resolvers.types.materials.el.get_material",
                 return_value=UnnamedMaterial(),
             ):
                 result = self.query("... on Material { name }")

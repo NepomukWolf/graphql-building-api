@@ -4,10 +4,10 @@ from pathlib import Path
 import unittest
 from unittest.mock import patch
 
-from api.gql.resolvers.context import ModelContext
-from api.gql.resolvers.types.elements import resolve_element_intersects
-from api.gql.resolvers.types.zones import resolve_zone_adjacent
-from api.ifc.topology import BoundingBox, TopologyService, boxes_adjacent, boxes_intersect
+from graphql_building_api.gql.resolvers.context import ModelContext
+from graphql_building_api.gql.resolvers.types.elements import resolve_element_intersects
+from graphql_building_api.gql.resolvers.types.zones import resolve_zone_adjacent
+from graphql_building_api.ifc.topology import BoundingBox, TopologyService, boxes_adjacent, boxes_intersect
 
 
 class FakeEntity:
@@ -139,8 +139,8 @@ class TopologyResolverTests(unittest.TestCase):
             "_model_context": context,
         }
 
-        with patch("api.ifc.helpers.el.get_psets", return_value={}), patch(
-            "api.gql.resolvers.types.elements.topology_service.intersects",
+        with patch("graphql_building_api.ifc.helpers.el.get_psets", return_value={}), patch(
+            "graphql_building_api.gql.resolvers.types.elements.topology_service.intersects",
             return_value=[door],
         ) as intersects:
             result = resolve_element_intersects(
@@ -172,7 +172,7 @@ class TopologyResolverTests(unittest.TestCase):
         }
 
         with patch(
-            "api.gql.resolvers.types.zones.topology_service.adjacent",
+            "graphql_building_api.gql.resolvers.types.zones.topology_service.adjacent",
             return_value=[space_a],
         ) as adjacent:
             result = resolve_zone_adjacent(

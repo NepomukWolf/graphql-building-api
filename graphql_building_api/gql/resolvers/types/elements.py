@@ -6,22 +6,22 @@ from ariadne import ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 import ifcopenshell.entity_instance
 
-from api.gql.resolvers.context import (
+from graphql_building_api.gql.resolvers.context import (
     attach_model_context,
     get_model_context,
     ifc_entity,
 )
-from api.gql.resolvers.selection import element_topology_candidates
-from api.gql.resolvers.types.geometry import resolve_geometry_context
-from api.gql.resolvers.types.materials import resolve_material_assignment
-from api.ifc.helpers import (
+from graphql_building_api.gql.resolvers.selection import element_topology_candidates
+from graphql_building_api.gql.resolvers.types.geometry import resolve_geometry_context
+from graphql_building_api.gql.resolvers.types.materials import resolve_material_assignment
+from graphql_building_api.ifc.helpers import (
     element_info,
     get_children,
     get_parent,
     get_properties,
     is_building_element,
 )
-from api.ifc.topology import topology_service
+from graphql_building_api.ifc.topology import topology_service
 
 building_element = ObjectType("BuildingElement")
 

@@ -10,7 +10,7 @@ import ifcopenshell.entity_instance
 from shapely.geometry import GeometryCollection, Polygon
 from shapely import to_wkt
 
-from api.config import GeometryConfig
+from graphql_building_api.config import GeometryConfig
 
 from .geometry import GeometryHandler
 from .geometry_formats import GeometryFormatSpec, get_geometry_format

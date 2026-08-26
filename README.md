@@ -27,12 +27,12 @@ uv sync
 
 This repository does not redistribute IFC model files or generated geometry.
 Both can be large and may have project-specific licensing constraints. Local
-model folders under `api/static/models/` are intentionally ignored by git.
+model folders under `graphql_building_api/static/models/` are intentionally ignored by git.
 
 Use this folder layout for your own IFC files:
 
 ```text
-api/static/models/2026-SampleModel/2026-SampleModel.ifc
+graphql_building_api/static/models/2026-SampleModel/2026-SampleModel.ifc
 ```
 
 The folder name and IFC filename must match. `2026-SampleModel` is the configured
@@ -43,33 +43,33 @@ starting the server to select a different default.
 
 Once the python environment is setup and activated, you can proceed with the following steps:
 
-1. **Add your model:** Place your IFC model in `api/static/models/<model name>/<model name>.ifc`.
+1. **Add your model:** Place your IFC model in `graphql_building_api/static/models/<model name>/<model name>.ifc`.
 
    For the default configuration:
 
    ```shell
-   mkdir -p api/static/models/2026-SampleModel
-   cp /path/to/your/model.ifc api/static/models/2026-SampleModel/2026-SampleModel.ifc
+   mkdir -p graphql_building_api/static/models/2026-SampleModel
+   cp /path/to/your/model.ifc graphql_building_api/static/models/2026-SampleModel/2026-SampleModel.ifc
    ```
 
    To use a different startup model, set `DEFAULT_MODEL` to the folder/model name:
 
    ```shell
-   DEFAULT_MODEL=my-model uv run api/app.py
+   DEFAULT_MODEL=my-model uv run graphql_building_api/app.py
    ```
 
 2. **Pre-generate geometry model:** There is a small CLI to extract and save element-wise geometry for an IFC model. Example usage:
 
    ```shell
-   uv run python -m scripts.generate_geometry api/static/models/2026-SampleModel/2026-SampleModel.ifc --formats OBJ GLB GLTF WKT STL
+   uv run python -m scripts.generate_geometry graphql_building_api/static/models/2026-SampleModel/2026-SampleModel.ifc --formats OBJ GLB GLTF WKT STL
    ```
 
-   The generated geometry files will be located at `api/static/models/<model name>/elements/<element guid>/`.
+   The generated geometry files will be located at `graphql_building_api/static/models/<model name>/elements/<element guid>/`.
 
-3. **Start the GraphQL server:** The repository provides a small Flask + Ariadne server in `api/app.py` that serves a GraphQL endpoint (by default `/graphql`). Start it like:
+3. **Start the GraphQL server:** The repository provides a small Flask + Ariadne server in `graphql_building_api/app.py` that serves a GraphQL endpoint (by default `/graphql`). Start it like:
 
    ```shell
-   uv run api/app.py
+   uv run graphql_building_api/app.py
    ```
 
    The server can start without local models. `models` will return an empty
@@ -125,13 +125,13 @@ geometry(format: PLY, source: MODEL) {
 ```
 
 The server decides whether client source preferences are honored through
-`config.toml`. Generated geometry is only written to `api/static/models/` when
+`config.toml`. Generated geometry is only written to `graphql_building_api/static/models/` when
 `geometry.cache_generated = true`.
 
 ## Schema Extensions
 
 At startup, the server automatically loads GraphQL extensions from
-`api/extensions/`. Each direct child folder with a `schema.graphql` file is
+`graphql_building_api/extensions/`. Each direct child folder with a `schema.graphql` file is
 treated as an extension. A folder may also include `resolvers.py` exporting
 `all_types`, a list of Ariadne bindables such as `ObjectType` instances.
 
@@ -144,12 +144,12 @@ disabled = ["geometry_representations"]
 ```
 
 ```text
-api/extensions/my-extension/
+graphql_building_api/extensions/my-extension/
   schema.graphql
   resolvers.py
 ```
 
-The prototype includes `api/extensions/lca-extension/`, which extends
+The prototype includes `graphql_building_api/extensions/lca-extension/`, which extends
 `BuildingElement` with `dataSheetURL` and resolves deterministic demo URLs for
 common element types. The `geometry_representations` extension adds normalized
 structured IFC extrusions to the core geometry facade. It currently supports
@@ -347,13 +347,13 @@ query AvailableModels {
 
 If you want to jump into the code, here are some pointers about the project structure:
 
-- `api/app.py`: Flask + Ariadne GraphQL server and startup.
-- `api/config.py`: local runtime configuration.
+- `graphql_building_api/app.py`: Flask + Ariadne GraphQL server and startup.
+- `graphql_building_api/config.py`: local runtime configuration.
 - `config.toml`: project-level runtime defaults.
-- `api/gql/`: GraphQL schema and resolver bindings.
-- `api/extensions/`: auto-loaded schema extensions and optional extension resolvers.
-- `api/ifc/`: IFC model loading, relationship helpers, and geometry helpers.
-- `api/static/models/<model>/`: canonical local model folder, containing `<model>.ifc` and generated geometry under `elements/<element guid>/`.
+- `graphql_building_api/gql/`: GraphQL schema and resolver bindings.
+- `graphql_building_api/extensions/`: auto-loaded schema extensions and optional extension resolvers.
+- `graphql_building_api/ifc/`: IFC model loading, relationship helpers, and geometry helpers.
+- `graphql_building_api/static/models/<model>/`: canonical local model folder, containing `<model>.ifc` and generated geometry under `elements/<element guid>/`.
 - `docs/architecture.md`: Mermaid diagrams for request flow, geometry resolution, providers, and static layout.
 - `scripts/generate_geometry.py`: CLI helper that generates geometry and copies IFC into the static model folder.
 

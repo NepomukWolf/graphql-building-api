@@ -3,10 +3,10 @@ from __future__ import annotations
 from ariadne import ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 
-from api.gql.resolvers.context import get_model_context, ifc_entity
-from api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
-from api.ifc.geometry_service import GeometryRequest, geometry_service
-from api.ifc.helpers import get_entity_id
+from graphql_building_api.gql.resolvers.context import get_model_context, ifc_entity
+from graphql_building_api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
+from graphql_building_api.ifc.geometry_service import GeometryRequest, geometry_service
+from graphql_building_api.ifc.helpers import get_entity_id
 
 geometry = ObjectType("Geometry")
 

@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 import ifcopenshell.entity_instance
 import ifcopenshell.file
 
-from api.ifc.geometry import GeometryHandler
-from api.ifc.helpers import get_entity_id
+from graphql_building_api.ifc.geometry import GeometryHandler
+from graphql_building_api.ifc.helpers import get_entity_id
 
 ADJACENCY_CLEARANCE = 0.05
 OVERLAP_EPSILON = 1e-6

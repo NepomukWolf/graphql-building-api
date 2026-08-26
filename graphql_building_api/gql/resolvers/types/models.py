@@ -3,9 +3,9 @@ from __future__ import annotations
 from ariadne import ObjectType
 from graphql.type.definition import GraphQLResolveInfo
 
-from api.gql.resolvers.context import ModelContext, attach_model_context
-from api.gql.resolvers.selection import all_model_zones, apply_element_query
-from api.ifc.helpers import element_info, zone_info
+from graphql_building_api.gql.resolvers.context import ModelContext, attach_model_context
+from graphql_building_api.gql.resolvers.selection import all_model_zones, apply_element_query
+from graphql_building_api.ifc.helpers import element_info, zone_info
 
 model = ObjectType("Model")
 model_info = ObjectType("ModelInfo")

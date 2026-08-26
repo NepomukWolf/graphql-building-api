@@ -5,12 +5,12 @@ import ifcopenshell.entity_instance
 import ifcopenshell.file
 import ifcopenshell.util.selector as selector
 
-from api.gql.resolvers.context import (
+from graphql_building_api.gql.resolvers.context import (
     ModelContext,
     attach_model_context,
     get_model_context,
 )
-from api.ifc.helpers import (
+from graphql_building_api.ifc.helpers import (
     get_entity_id,
     matches_element_filters,
     matches_element_type,

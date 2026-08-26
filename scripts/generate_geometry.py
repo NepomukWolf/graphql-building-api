@@ -6,10 +6,10 @@ import ifcopenshell
 import json
 from pathlib import Path
 
-from api.config import GeometryConfig
-from api.ifc.geometry import GeometryHandler
-from api.ifc.geometry_formats import GEOMETRY_FORMATS, normalize_geometry_format
-from api.ifc.geometry_service import GeometryRequest, geometry_service
+from graphql_building_api.config import GeometryConfig
+from graphql_building_graphql_building_api.ifc.geometry import GeometryHandler
+from graphql_building_graphql_building_api.ifc.geometry_formats import GEOMETRY_FORMATS, normalize_geometry_format
+from graphql_building_graphql_building_api.ifc.geometry_service import GeometryRequest, geometry_service
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def generate_geometry(
     """Generate geometry files from an IFC file for a quick local showcase.
 
     Steps (for local prototype):
-    - create folder `api/static/models/<model_name>` (model_name is the IFC filename without ext)
+    - create folder `graphql_building_api/static/models/<model_name>` (model_name is the IFC filename without ext)
     - copy the original IFC file into that folder
     - create `elements` subfolder
     - open the IFC model and iterate products; for each product that yields geometry:
@@ -52,7 +52,7 @@ def generate_geometry(
 
     if GeometryHandler is None:
         raise RuntimeError(
-            "GeometryHandler is not available. Ensure api.ifc.geometry can be "
+            "GeometryHandler is not available. Ensure graphql_building_api.ifc.geometry can be "
             "imported and its dependencies (ifcopenshell.geom, trimesh) are installed."
         )
 

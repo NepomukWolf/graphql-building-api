@@ -7,15 +7,15 @@ from ariadne import QueryType, graphql_sync, make_executable_schema
 import ifcopenshell
 from ifcopenshell.api.root import create_entity
 
-from api.extensions.geometry_representations.resolvers import (
+from graphql_building_api.extensions.geometry_representations.resolvers import (
     all_types as representation_types,
     normalized_representations,
 )
-from api.gql.extensions import load_extensions
+from graphql_building_api.gql.extensions import load_extensions
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-EXTENSIONS_DIR = PROJECT_ROOT / "api" / "extensions"
+EXTENSIONS_DIR = PROJECT_ROOT / "graphql_building_api" / "extensions"
 
 
 class GeometryFixture:

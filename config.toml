@@ -11,7 +11,7 @@ respect_client_source = true
 # Whether geometry may be generated dynamically from the loaded IFC model.
 allow_dynamic_generation = true
 
-# Whether dynamically generated geometry is written to api/static/models.
+# Whether dynamically generated geometry is written to graphql_building_api/static/models.
 cache_generated = false
 
 [extensions]

@@ -7,9 +7,9 @@ from unittest.mock import patch
 
 import numpy as np
 
-from api.config import GeometryConfig
-from api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
-from api.ifc.geometry_service import (
+from graphql_building_api.config import GeometryConfig
+from graphql_building_api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
+from graphql_building_api.ifc.geometry_service import (
     GeometryRequest,
     GltfGeometryProvider,
     WktGeometryProvider,
@@ -74,7 +74,7 @@ class GeometryFormatTests(unittest.TestCase):
         self.assertEqual(get_geometry_format("GLTF").content_type, "model/gltf+json")
 
     def test_wkt_provider_exports_triangle_geometry_collection(self):
-        with patch("api.ifc.geometry_service.GeometryHandler", FakeGeometryHandler):
+        with patch("graphql_building_api.ifc.geometry_service.GeometryHandler", FakeGeometryHandler):
             artifact = WktGeometryProvider().generate(geometry_request("WKT"))
 
         self.assertIsNotNone(artifact)
@@ -83,7 +83,7 @@ class GeometryFormatTests(unittest.TestCase):
         self.assertIn("POLYGON Z", payload)
 
     def test_gltf_provider_embeds_external_buffers(self):
-        with patch("api.ifc.geometry_service.GeometryHandler", FakeGeometryHandler):
+        with patch("graphql_building_api.ifc.geometry_service.GeometryHandler", FakeGeometryHandler):
             artifact = GltfGeometryProvider().generate(geometry_request("GLTF"))
 
         self.assertIsNotNone(artifact)
