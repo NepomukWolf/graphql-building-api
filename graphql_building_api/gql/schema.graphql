@@ -1,6 +1,9 @@
 type Query {
-  model(name: String): Model
-  models: [ModelInfo!]!
+  modelId: ID!
+  building: Building
+  storeys(where: ZoneQuery): [Storey!]!
+  spaces(where: ZoneQuery): [Space!]!
+  elements(where: ElementQuery): [BuildingElement!]!
 }
 
 type Mutation {
@@ -19,7 +22,6 @@ type ModelChangeEvent {
 type Subscription { modelChanged: ModelChangeEvent! }
 
 input UpdatePropertyInput {
-  model: String
   guid: ID!
   propertySet: String!
   property: String!
@@ -47,29 +49,9 @@ For example:
 ```
 """
 input PatchPropertiesInput {
-  model: String
   guid: ID!
   includeInherited: Boolean! = false
   patch: JSON!
-}
-
-"""
-Loaded IFC model entry point.
-"""
-type Model {
-  name: String!
-  building: Building
-  storeys(where: ZoneQuery): [Storey!]!
-  spaces(where: ZoneQuery): [Space!]!
-  elements(where: ElementQuery): [BuildingElement!]!
-}
-
-"""
-Available IFC model.
-"""
-type ModelInfo {
-  name: String!
-  isDefault: Boolean!
 }
 
 """

@@ -24,12 +24,15 @@ def model_store(info: GraphQLResolveInfo):
 
 def load_model_context(
     info: GraphQLResolveInfo,
-    model_name: str | None = None,
 ) -> ModelContext:
+    cached = info.context.get("model_context")
+    if cached is not None:
+        return cast(ModelContext, cached)
+
     store = model_store(info)
-    selected_name = store.model_folder_name(model_name)
+    selected_name = store.model_folder_name()
     try:
-        ifc_model_value = store.get(model_name)
+        ifc_model_value = store.get()
     except (FileNotFoundError, ValueError) as exc:
         available = ", ".join(store.available_models()) or "none"
         raise GraphQLError(
@@ -39,7 +42,7 @@ def load_model_context(
             f"or request one of the available models: {available}."
         ) from exc
 
-    return ModelContext(
+    context = ModelContext(
         name=selected_name,
         model=ifc_model_value,
         geometry_base_url=(
@@ -49,6 +52,8 @@ def load_model_context(
             info.context["models_dir"] / selected_name / "elements"
         ),
     )
+    info.context["model_context"] = context
+    return context
 
 
 def ifc_entity(obj: Any) -> ifcopenshell.entity_instance:

@@ -4,17 +4,12 @@
 
 ```mermaid
 flowchart TD
-    Client[GraphQL client] --> Endpoint[Flask /graphql endpoint]
+    Client[GraphQL client] --> Endpoint[FastAPI model-scoped endpoint]
     Endpoint --> Ariadne[Ariadne graphql_sync]
-    Ariadne --> Query[Query resolver]
-
-    Query --> Models{Requested field}
-    Models -- models --> Discover[IfcModelStore.available_models]
-    Discover --> ModelInfo[ModelInfo list]
-
-    Models -- model(name) --> Store[IfcModelStore.get]
+    Ariadne --> Query[Root query resolver]
+    Query --> Store[Endpoint-selected IfcModelStore.get]
     Store --> Context[Model context]
-    Context --> ModelFields[Model field resolvers]
+    Context --> ModelFields[Root building-data fields]
 
     ModelFields --> Building[building]
     ModelFields --> Storeys[storeys where]
@@ -26,6 +21,11 @@ flowchart TD
     Spaces --> ZoneResolvers
     Elements --> ElementResolvers[BuildingElement resolvers]
 ```
+
+The GraphQL document does not select a model. `/graphql` uses the standalone
+server's configured default, while `/models/{model_id}/graphql` uses the path
+parameter. In the multi-level host, model listing and metadata are provided by
+the separate REST and catalog GraphQL APIs.
 
 ## Geometry Resolution Flow
 

@@ -53,12 +53,10 @@ class MaterialResolverTests(unittest.TestCase):
             {
                 "query": f"""
                     query {{
-                      model {{
-                        elements(where: {{ id: \"{self.wall.GlobalId}\" }}) {{
-                          materials {{
-                            __typename
-                            {selection}
-                          }}
+                      elements(where: {{ id: \"{self.wall.GlobalId}\" }}) {{
+                        materials {{
+                          __typename
+                          {selection}
                         }}
                       }}
                     }}
@@ -71,7 +69,7 @@ class MaterialResolverTests(unittest.TestCase):
 
     @staticmethod
     def assignment(result):
-        return result["data"]["model"]["elements"][0]["materials"]
+        return result["data"]["elements"][0]["materials"]
 
     def test_element_without_material_returns_null(self):
         result = self.query("... on Material { id }")

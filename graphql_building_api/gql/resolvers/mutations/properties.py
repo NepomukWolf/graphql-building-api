@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional, TypedDict
+from typing import Any, TypedDict
 
 from ariadne import MutationType
 from graphql import GraphQLError
@@ -17,18 +17,14 @@ from graphql_building_api.gql.resolvers.context import (
 from graphql_building_api.ifc.helpers import element_info
 
 
-class OptionalModelInput(TypedDict, total=False):
-    model: Optional[str]
-
-
-class UpdatePropertyInput(OptionalModelInput):
+class UpdatePropertyInput(TypedDict):
     guid: str
     propertySet: str
     property: str
     value: Any
 
 
-class OptionalPatchPropertiesInput(OptionalModelInput, total=False):
+class OptionalPatchPropertiesInput(TypedDict, total=False):
     includeInherited: bool
 
 
@@ -37,7 +33,7 @@ class PatchPropertiesInput(OptionalPatchPropertiesInput):
     patch: Any
 
 
-PropertySetPatch = Optional[dict[str, Any]]
+PropertySetPatch = dict[str, Any] | None
 
 
 property_mutations = MutationType()
@@ -45,13 +41,12 @@ property_mutations = MutationType()
 
 @property_mutations.field("updateProperty")
 def resolve_update_property(_obj, info: GraphQLResolveInfo, input: UpdatePropertyInput):
-    model_name = input.get("model")
     guid = input["guid"]
     pset_name = input["propertySet"]
     property_name = input["property"]
     new_value = input["value"]
 
-    model_context: ModelContext = load_model_context(info, model_name)
+    model_context: ModelContext = load_model_context(info)
     model = model_context.model
 
     # Try accessing the element.
@@ -84,7 +79,7 @@ def resolve_patch_properties(
     info: GraphQLResolveInfo,
     input: PatchPropertiesInput,
 ):
-    model_context = load_model_context(info, input.get("model"))
+    model_context = load_model_context(info)
     model = model_context.model
     element = _entity_by_guid(model, input["guid"])
     patch = _validate_property_patch(input["patch"])

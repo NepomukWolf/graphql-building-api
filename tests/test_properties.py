@@ -159,11 +159,9 @@ class ElementPropertiesTests(unittest.TestCase):
             {
                 "query": f"""
                     query {{
-                      model {{
-                        elements(where: {{ id: \"{self.wall.GlobalId}\" }}) {{
-                          properties(name: \"IsExternal\") {{
-                            name value pset
-                          }}
+                      elements(where: {{ id: \"{self.wall.GlobalId}\" }}) {{
+                        properties(name: \"IsExternal\") {{
+                          name value pset
                         }}
                       }}
                     }}
@@ -181,19 +179,17 @@ class ElementPropertiesTests(unittest.TestCase):
             result,
             {
                 "data": {
-                    "model": {
-                        "elements": [
-                            {
-                                "properties": [
-                                    {
-                                        "name": "IsExternal",
-                                        "value": True,
-                                        "pset": "Pset_WallCommon",
-                                    }
-                                ]
-                            }
-                        ]
-                    }
+                    "elements": [
+                        {
+                            "properties": [
+                                {
+                                    "name": "IsExternal",
+                                    "value": True,
+                                    "pset": "Pset_WallCommon",
+                                }
+                            ]
+                        }
+                    ]
                 }
             },
         )

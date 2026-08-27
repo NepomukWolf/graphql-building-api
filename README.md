@@ -81,9 +81,8 @@ Once the python environment is setup and activated, you can proceed with the fol
    generic discovery entries; GraphQL introspection remains the authoritative
    schema documentation.
 
-   The server can start without local models. `models` will return an empty
-   list until you add an IFC file. Model-specific queries return a clear error
-   if the requested model is not available.
+   The server can start without local models. Model-specific queries return a
+   clear GraphQL error until the endpoint-selected model is available.
 
 4. **Explore the API:** Use your preferred GraphQL client against:
 
@@ -93,7 +92,7 @@ Once the python environment is setup and activated, you can proceed with the fol
 
    For example, Apollo Sandbox and Altair can introspect the schema and help compose queries.
 
-5. **Query the endpoint:** Send GraphQL requests to `/graphql` using POST. GET requests with a `query` parameter are also supported. A model can additionally be selected by the URL at `/models/<model-id>/graphql`; on this scoped route, the path-selected model takes precedence over a `model` or `name` argument in the document.
+5. **Query the endpoint:** Send GraphQL requests to `/graphql` using POST. GET requests with a `query` parameter are also supported. `/graphql` uses the configured default model; `/models/<model-id>/graphql` selects the model through the URL. GraphQL documents contain no separate model selector.
 
 ## Live model changes
 
@@ -120,10 +119,10 @@ file-level changes to the same model.
 
 ## GraphQL: schema shape and example queries
 
-The schema exposes IFC data through `model(name: String)`. If `name` is omitted,
-the configured default model is used. `models` returns the available model names.
-Within a model, `building` returns the root building zone, while `storeys`,
-`spaces`, and `elements(where: ElementQuery)` return list selections.
+The schema exposes `modelId`, `building`, `storeys`, `spaces`, and
+`elements(where: ElementQuery)` directly on the query root. `modelId` reports
+the endpoint-selected model. Model discovery belongs to the multi-level host's
+REST and catalog GraphQL APIs rather than this model-scoped schema.
 
 Each building element returned by the API provides at least the following fields:
 
@@ -189,23 +188,21 @@ rectangle and circle profiles; unsupported representation items are omitted.
 
 ```graphql
 query StructuredGeometry {
-  model(name: "duplex_arch") {
-    elements(where: { type: "Wall" }) {
-      guid
-      geometry {
-        representations {
-          __typename
-          identifier
-          placement { matrix }
-          ... on ExtrusionRepresentation {
-            depth
-            direction { x y z }
-            profile {
-              __typename
-              name
-              ... on RectangleProfile { width height }
-              ... on CircleProfile { radius }
-            }
+  elements(where: { type: "Wall" }) {
+    guid
+    geometry {
+      representations {
+        __typename
+        identifier
+        placement { matrix }
+        ... on ExtrusionRepresentation {
+          depth
+          direction { x y z }
+          profile {
+            __typename
+            name
+            ... on RectangleProfile { width height }
+            ... on CircleProfile { radius }
           }
         }
       }
@@ -226,16 +223,14 @@ Some example queries.
 
 ```graphql
 query ListWalls {
-  model {
+  modelId
+  elements(where: { type: "Wall" }) {
+    guid
     name
-    elements(where: { type: "Wall" }) {
-      guid
-      name
-      geometry(format: OBJ) {
-        url
-        extension
-        contentType
-      }
+    geometry(format: OBJ) {
+      url
+      extension
+      contentType
     }
   }
 }
@@ -247,16 +242,14 @@ This query returns a list of wall elements with URLs pointing to static geometry
 
 ```graphql
 query ExternalWalls {
-  model {
-    elements(where: { type: "Wall", filters: [EXTERNAL] }) {
-      guid
+  elements(where: { type: "Wall", filters: [EXTERNAL] }) {
+    guid
+    name
+    type
+    properties(pset: "Pset_WallCommon", name: "IsExternal") {
       name
-      type
-      properties(pset: "Pset_WallCommon", name: "IsExternal") {
-        name
-        value
-        pset
-      }
+      value
+      pset
     }
   }
 }
@@ -270,12 +263,10 @@ requires `IsExternal = true`, while `LOAD_BEARING` requires
 
 ```graphql
 query SelectorWalls {
-  model(name: "example-model") {
-    elements(where: { selector: "IfcWall" }) {
-      guid
-      name
-      type
-    }
+  elements(where: { selector: "IfcWall" }) {
+    guid
+    name
+    type
   }
 }
 ```
@@ -287,20 +278,18 @@ with `type`, `search`, and `filters`.
 
 ```graphql
 query ElementTopology {
-  model(name: "example-model") {
-    elements(where: { type: "Wall" }) {
+  elements(where: { type: "Wall" }) {
+    guid
+    name
+    intersects(where: { type: "Door" }) {
       guid
       name
-      intersects(where: { type: "Door" }) {
-        guid
-        name
-        type
-      }
-      adjacent(where: { type: "Slab" }) {
-        guid
-        name
-        type
-      }
+      type
+    }
+    adjacent(where: { type: "Slab" }) {
+      guid
+      name
+      type
     }
   }
 }
@@ -316,30 +305,28 @@ approximate topology relation intended for lightweight querying and demos.
 
 ```graphql
 query GetElement {
-  model(name: "example-model") {
-    elements(where: { id: "<ELEMENT-GUID-HERE>" }) {
+  elements(where: { id: "<ELEMENT-GUID-HERE>" }) {
+    guid
+    name
+    type
+    geometry(format: OBJ) {
+      payload
+      encoding
+      extension
+      contentType
+    }
+    partOf {
       guid
       name
-      type
-      geometry(format: OBJ) {
-        payload
-        encoding
-        extension
-        contentType
-      }
-      partOf {
-        guid
-        name
-      }
-      contains {
-        guid
-        name
-      }
-      properties(pset: "Pset_WallCommon") {
-        name
-        value
-        pset
-      }
+    }
+    contains {
+      guid
+      name
+    }
+    properties(pset: "Pset_WallCommon") {
+      name
+      value
+      pset
     }
   }
 }
@@ -351,27 +338,22 @@ This returns a list containing the matching element when the id exists.
 
 ```graphql
 query WallDataSheets {
-  model(name: "example-model") {
-    elements(where: { type: "Wall" }) {
-      guid
-      name
-      type
-      dataSheetURL
-    }
+  elements(where: { type: "Wall" }) {
+    guid
+    name
+    type
+    dataSheetURL
   }
 }
 ```
 
 The `dataSheetURL` field is provided by the demo extension, not the core schema.
 
-**List available models:**
+**Confirm the selected model:**
 
 ```graphql
-query AvailableModels {
-  models {
-    name
-    isDefault
-  }
+query SelectedModel {
+  modelId
 }
 ```
 

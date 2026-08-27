@@ -1,20 +1,18 @@
 query ElementTopologyDemo {
-  # Replace example-model and the element id with values from your local model.
-  model(name: "example-model") {
-    elements(where: { id: "0Czv28JAHDuepx33rj$lAZ" }) {
+  # Replace the element id with one from the URL-selected model.
+  elements(where: { id: "0Czv28JAHDuepx33rj$lAZ" }) {
+    guid
+    name
+    type
+    intersects(where: { type: "Wall" }) {
       guid
       name
       type
-      intersects(where: { type: "Wall" }) {
-        guid
-        name
-        type
-      }
-      adjacent(where: { type: "Column" }) {
-        guid
-        name
-        type
-      }
+    }
+    adjacent(where: { type: "Column" }) {
+      guid
+      name
+      type
     }
   }
 }

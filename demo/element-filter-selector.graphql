@@ -1,27 +1,24 @@
 query ExternalWallSelectorDemo {
-  # Replace example-model with your local model folder name.
-  model(name: "example-model") {
-    elements(
-      where: {
-        type: "Wall"
-        filters: [EXTERNAL]
-        selector: "IfcWall"
-      }
-    ) {
-      guid
+  elements(
+    where: {
+      type: "Wall"
+      filters: [EXTERNAL]
+      selector: "IfcWall"
+    }
+  ) {
+    guid
+    name
+    type
+    dataSheetURL
+    properties(pset: "Pset_WallCommon") {
       name
-      type
-      dataSheetURL
-      properties(pset: "Pset_WallCommon") {
-        name
-        value
-        pset
-      }
-      geometry(format: OBJ) {
-        url
-        extension
-        contentType
-      }
+      value
+      pset
+    }
+    geometry(format: OBJ) {
+      url
+      extension
+      contentType
     }
   }
 }

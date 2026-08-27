@@ -6,6 +6,7 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
 from fastapi.testclient import TestClient
+import ifcopenshell
 
 import graphql_building_api.app as app_module
 from graphql_building_api.config import CONFIG
@@ -64,15 +65,51 @@ class IfcModelStoreTests(unittest.TestCase):
 
 
 class ModelGraphQLTests(unittest.TestCase):
-    def test_graphql_models_query_works_without_local_models(self):
+    def test_schema_exposes_flattened_model_query(self):
         with TemporaryDirectory() as temp_dir:
             store = IfcModelStore(Path(temp_dir), "example-model")
             response = TestClient(app_module.create_app(store, app_module.schema)).post(
-                "/graphql", json={"query": "{ models { name isDefault } }"}
+                "/graphql",
+                json={"query": "{ __schema { queryType { fields { name } } } }"},
             )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"data": {"models": []}})
+        fields = {
+            field["name"]
+            for field in response.json()["data"]["__schema"]["queryType"]["fields"]
+        }
+        self.assertEqual(fields, {"modelId", "building", "storeys", "spaces", "elements"})
+        self.assertIsNone(app_module.schema.get_type("Model"))
+        self.assertIsNone(app_module.schema.get_type("ModelInfo"))
+        self.assertNotIn(
+            "model",
+            app_module.schema.get_type("UpdatePropertyInput").fields,
+        )
+        self.assertNotIn(
+            "model",
+            app_module.schema.get_type("PatchPropertiesInput").fields,
+        )
+
+    def test_default_and_scoped_routes_select_the_model(self):
+        with TemporaryDirectory() as temp_dir:
+            models_dir = Path(temp_dir)
+            for model_id in ("default", "selected"):
+                model_dir = models_dir / model_id
+                model_dir.mkdir()
+                ifcopenshell.file(schema="IFC4").write(
+                    str(model_dir / f"{model_id}.ifc")
+                )
+            store = IfcModelStore(models_dir, "default")
+            client = TestClient(app_module.create_app(store, app_module.schema))
+
+            default = client.post("/graphql", json={"query": "{ modelId }"})
+            selected = client.post(
+                "/models/selected/graphql",
+                json={"query": "{ modelId }"},
+            )
+
+        self.assertEqual(default.json(), {"data": {"modelId": "default"}})
+        self.assertEqual(selected.json(), {"data": {"modelId": "selected"}})
 
     def test_graphql_missing_model_returns_clear_error(self):
         with TemporaryDirectory() as temp_dir:
@@ -81,14 +118,14 @@ class ModelGraphQLTests(unittest.TestCase):
             try:
                 response = TestClient(app_module.create_app(store, app_module.schema)).post(
                     "/graphql",
-                    json={"query": "{ model { name } }"},
+                    json={"query": "{ modelId }"},
                 )
             finally:
                 logging.disable(logging.NOTSET)
 
         body = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertIsNone(body["data"]["model"])
+        self.assertIsNone(body["data"])
         self.assertIn("IFC model 'example-model' is not available", body["errors"][0]["message"])
 
 
