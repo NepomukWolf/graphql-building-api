@@ -24,3 +24,8 @@ GeometryRoadmap.md
 
 # MacOS finder
 **/.DS_Store
+
+# Test and strategy files
+docs/mutation-design.md
+graphql_building_api/static/models/2026-SampleModel/
+graphql_building_api/static/models/duplex_arch/
