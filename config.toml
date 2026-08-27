@@ -1,5 +1,5 @@
 default_model = "2026-SampleModel"
-default_port = 5050
+default_port = 8000
 
 [geometry]
 # file | model

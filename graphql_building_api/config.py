@@ -21,7 +21,7 @@ class GeometryConfig:
 @dataclass(frozen=True)
 class AppConfig:
     default_model: str = "2026-SampleModel"
-    default_port: int = 5050
+    default_port: int = 8000
     geometry: GeometryConfig = GeometryConfig()
     disabled_extensions: tuple[str, ...] = ()
 
@@ -55,7 +55,7 @@ def load_config() -> AppConfig:
 
     return AppConfig(
         default_model=raw_config.get("default_model", "2026-SampleModel"),
-        default_port=raw_config.get("default_port", 5050),
+        default_port=raw_config.get("default_port", 8000),
         geometry=geometry,
         disabled_extensions=tuple(raw_extensions.get("disabled", [])),
     )

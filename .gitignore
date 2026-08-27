@@ -10,8 +10,8 @@ wheels/
 .venv
 
 # Local IFC models and generated geometry
-api/static/models/*
-!api/static/models/.gitkeep
+graphql_building_api/static/models/*
+!graphql_building_api/static/models/.gitkeep
 
 scratch
 

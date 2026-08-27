@@ -8,6 +8,9 @@ The geometry can either be generated while resolving a query directly from the I
 
 - Exposes a compact BOT-like spatial structure with buildings, storeys, spaces, and generic building elements.
 - Resolver returns element metadata plus a flat `geometry` object, so clients can request file URLs, inline payloads, or both.
+- Provides property update and merge-patch mutations.
+- Publishes committed model-change notifications through GraphQL subscriptions.
+- Can run independently or be embedded as the semantic API level of `bim-api`.
 
 ## Requirements and Setup
 
@@ -55,7 +58,7 @@ Once the python environment is setup and activated, you can proceed with the fol
    To use a different startup model, set `DEFAULT_MODEL` to the folder/model name:
 
    ```shell
-   DEFAULT_MODEL=my-model uv run graphql_building_api/app.py
+   DEFAULT_MODEL=my-model uv run app.py
    ```
 
 2. **Pre-generate geometry model:** There is a small CLI to extract and save element-wise geometry for an IFC model. Example usage:
@@ -72,6 +75,10 @@ Once the python environment is setup and activated, you can proceed with the fol
    uv run app.py
    ```
 
+   The default address is `http://127.0.0.1:8000`. Override it with `PORT`,
+   for example `PORT=8100 uv run app.py`. FastAPI also exposes `/docs`,
+   `/redoc`, and `/openapi.json`.
+
    The server can start without local models. `models` will return an empty
    list until you add an IFC file. Model-specific queries return a clear error
    if the requested model is not available.
@@ -79,12 +86,35 @@ Once the python environment is setup and activated, you can proceed with the fol
 4. **Explore the API:** Use your preferred GraphQL client against:
 
    ```text
-   http://127.0.0.1:5050/graphql
+   http://127.0.0.1:8000/graphql
    ```
 
    For example, Apollo Sandbox and Altair can introspect the schema and help compose queries.
 
-5. **Query the endpoint:** Send GraphQL requests to `/graphql` using POST. GET requests with a `query` parameter are also supported for clients that introspect via GET.
+5. **Query the endpoint:** Send GraphQL requests to `/graphql` using POST. GET requests with a `query` parameter are also supported. A model can additionally be selected by the URL at `/models/<model-id>/graphql`; on this scoped route, the path-selected model takes precedence over a `model` or `name` argument in the document.
+
+## Live model changes
+
+The default and model-scoped GraphQL endpoints accept subscriptions over
+WebSockets using `graphql-transport-ws`:
+
+```graphql
+subscription {
+  modelChanged {
+    modelId
+    revision
+    kind
+    source
+  }
+}
+```
+
+The standalone server publishes an `UPDATED` event after a successful property
+mutation that changes its in-memory model. Failed and unchanged mutations do not
+publish. The broker and revision counters are in memory and intended for one
+Uvicorn worker. In the multi-level `bim-api` host, this schema receives the
+shared framework broker, so subscribers also observe detailed IFC mutations and
+file-level changes to the same model.
 
 ## GraphQL: schema shape and example queries
 
@@ -339,6 +369,34 @@ query AvailableModels {
   models {
     name
     isDefault
+  }
+}
+```
+
+## Property mutations
+
+`patchProperties` applies a merge patch to one IFC entity identified by its
+GlobalId. Object values create or update property sets and properties; `null`
+removes them. The standalone API updates its cached model, while the integrated
+`bim-api` host runs the mutation on an isolated copy and persists it to the
+canonical IFC file after successful GraphQL execution.
+
+```graphql
+mutation UpdateWallProperties {
+  patchProperties(input: {
+    guid: "<WALL-GLOBAL-ID>"
+    patch: {
+      Pset_WallCommon: {
+        IsExternal: true
+        Reference: "A-101"
+      }
+    }
+  }) {
+    guid
+    properties(pset: "Pset_WallCommon") {
+      name
+      value
+    }
   }
 }
 ```
