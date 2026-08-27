@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
+from fastapi.testclient import TestClient
 
 import graphql_building_api.app as app_module
 from graphql_building_api.config import CONFIG
@@ -65,34 +66,27 @@ class IfcModelStoreTests(unittest.TestCase):
 class ModelGraphQLTests(unittest.TestCase):
     def test_graphql_models_query_works_without_local_models(self):
         with TemporaryDirectory() as temp_dir:
-            original_store = app_module.ifc_models
-            app_module.ifc_models = IfcModelStore(Path(temp_dir), "example-model")
-            try:
-                response = app_module.app.test_client().post(
-                    "/graphql",
-                    json={"query": "{ models { name isDefault } }"},
-                )
-            finally:
-                app_module.ifc_models = original_store
+            store = IfcModelStore(Path(temp_dir), "example-model")
+            response = TestClient(app_module.create_app(store, app_module.schema)).post(
+                "/graphql", json={"query": "{ models { name isDefault } }"}
+            )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json(), {"data": {"models": []}})
+        self.assertEqual(response.json(), {"data": {"models": []}})
 
     def test_graphql_missing_model_returns_clear_error(self):
         with TemporaryDirectory() as temp_dir:
-            original_store = app_module.ifc_models
-            app_module.ifc_models = IfcModelStore(Path(temp_dir), "example-model")
+            store = IfcModelStore(Path(temp_dir), "example-model")
             logging.disable(logging.ERROR)
             try:
-                response = app_module.app.test_client().post(
+                response = TestClient(app_module.create_app(store, app_module.schema)).post(
                     "/graphql",
                     json={"query": "{ model { name } }"},
                 )
             finally:
                 logging.disable(logging.NOTSET)
-                app_module.ifc_models = original_store
 
-        body = response.get_json()
+        body = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertIsNone(body["data"]["model"])
         self.assertIn("IFC model 'example-model' is not available", body["errors"][0]["message"])

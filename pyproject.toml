@@ -7,8 +7,7 @@ license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "ariadne>=0.26.2",
-    "flask>=3.1.2",
-    "flask-cors>=6.0.1",
+    "fastapi>=0.116",
     "ifcopenshell>=0.8.3.post2",
     "networkx>=3.5",
     "pyglet<2",
@@ -16,6 +15,7 @@ dependencies = [
     "scipy>=1.16.3",
     "shapely>=2.1.2",
     "trimesh>=4.9.0",
+    "uvicorn[standard]>=0.35",
 ]
 
 [build-system]
@@ -30,3 +30,6 @@ graphql_building_api = ["gql/*.graphql", "extensions/**/*.graphql"]
 
 [tool.pyright]
 typeCheckingMode = "basic"
+
+[dependency-groups]
+dev = ["httpx>=0.28", "pytest>=8.0"]

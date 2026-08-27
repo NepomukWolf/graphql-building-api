@@ -9,6 +9,7 @@ from graphql.type.schema import GraphQLSchema
 from graphql_building_api.config import API_DIR, GeometryConfig
 from graphql_building_api.gql.extensions import load_extensions
 from graphql_building_api.gql.resolvers import all_types
+from graphql_building_api.events import model_change_subscription
 
 
 def build_building_schema(
@@ -25,6 +26,7 @@ def build_building_schema(
         [type_defs, *extension_type_defs],
         *all_types,
         *extension_types,
+        model_change_subscription,
     )
 
 

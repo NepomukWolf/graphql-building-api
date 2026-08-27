@@ -8,6 +8,16 @@ type Mutation {
   patchProperties(input: PatchPropertiesInput!): BuildingElement
 }
 
+enum ModelChangeKind { CREATED UPDATED REPLACED DELETED }
+enum ModelChangeSource { FILE_API BUILDING_GRAPHQL IFC_GRAPHQL }
+type ModelChangeEvent {
+  modelId: ID!
+  revision: Int!
+  kind: ModelChangeKind!
+  source: ModelChangeSource!
+}
+type Subscription { modelChanged: ModelChangeEvent! }
+
 input UpdatePropertyInput {
   model: String
   guid: ID!
