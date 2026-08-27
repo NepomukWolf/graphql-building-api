@@ -66,10 +66,10 @@ Once the python environment is setup and activated, you can proceed with the fol
 
    The generated geometry files will be located at `graphql_building_api/static/models/<model name>/elements/<element guid>/`.
 
-3. **Start the GraphQL server:** The repository provides a small Flask + Ariadne server in `graphql_building_api/app.py` that serves a GraphQL endpoint (by default `/graphql`). Start it like:
+3. **Start the GraphQL server:** The repository provides a FastAPI + Ariadne ASGI server with HTTP and WebSocket GraphQL at `/graphql`. Start it like:
 
    ```shell
-   uv run graphql_building_api/app.py
+   uv run app.py
    ```
 
    The server can start without local models. `models` will return an empty
@@ -347,7 +347,7 @@ query AvailableModels {
 
 If you want to jump into the code, here are some pointers about the project structure:
 
-- `graphql_building_api/app.py`: Flask + Ariadne GraphQL server and startup.
+- `graphql_building_api/app.py`: FastAPI + Ariadne GraphQL server and reusable app factory.
 - `graphql_building_api/config.py`: local runtime configuration.
 - `config.toml`: project-level runtime defaults.
 - `graphql_building_api/gql/`: GraphQL schema and resolver bindings.
