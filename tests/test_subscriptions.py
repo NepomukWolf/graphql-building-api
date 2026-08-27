@@ -8,6 +8,17 @@ from graphql_building_api.app import create_app, schema
 from graphql_building_api.ifc.models import IfcModelStore
 
 
+def test_openapi_includes_generic_graphql_endpoints(tmp_path: Path):
+    client = TestClient(create_app(IfcModelStore(tmp_path, "demo"), schema))
+    paths = client.get("/openapi.json").json()["paths"]
+
+    for path in ("/graphql", "/models/{model_id}/graphql"):
+        operation = paths[path]["post"]
+        assert operation["tags"] == ["Building GraphQL"]
+        assert "requestBody" in operation
+        assert "graphql-transport-ws" in operation["description"]
+
+
 def test_standalone_mutation_publishes_model_change(tmp_path: Path):
     model_id = "demo"
     folder = tmp_path / model_id

@@ -77,7 +77,9 @@ Once the python environment is setup and activated, you can proceed with the fol
 
    The default address is `http://127.0.0.1:8000`. Override it with `PORT`,
    for example `PORT=8100 uv run app.py`. FastAPI also exposes `/docs`,
-   `/redoc`, and `/openapi.json`.
+   `/redoc`, and `/openapi.json`. Its GraphQL POST routes appear in OpenAPI as
+   generic discovery entries; GraphQL introspection remains the authoritative
+   schema documentation.
 
    The server can start without local models. `models` will return an empty
    list until you add an IFC file. Model-specific queries return a clear error

@@ -22,6 +22,22 @@ from graphql_building_api.execution import build_building_schema, execute_buildi
 from graphql_building_api.ifc.models import IfcModelStore
 
 
+GRAPHQL_OPENAPI = {
+    "requestBody": {
+        "required": True,
+        "content": {"application/json": {"schema": {
+            "type": "object", "required": ["query"],
+            "properties": {
+                "query": {"type": "string"},
+                "operationName": {"type": ["string", "null"]},
+                "variables": {"type": "object", "additionalProperties": True},
+            },
+        }}},
+    }
+}
+GRAPHQL_RESPONSES = {200: {"description": "GraphQL response; use introspection for the data shape."}}
+
+
 class ScopedModelStore:
     def __init__(self, store, model_id: str):
         self.store = store
@@ -117,7 +133,18 @@ def create_app(
             })
         return HTMLResponse(explorer.html(None))
 
-    @app.post("/graphql", include_in_schema=False)
+    @app.post(
+        "/graphql",
+        tags=["Building GraphQL"],
+        summary="Execute simplified GraphQL for the default model",
+        description=(
+            "Domain-oriented building GraphQL. GET opens the explorer; the same URL "
+            "supports subscriptions over WebSocket using graphql-transport-ws. Use "
+            "introspection for the complete schema."
+        ),
+        responses=GRAPHQL_RESPONSES,
+        openapi_extra=GRAPHQL_OPENAPI,
+    )
     async def graphql_http(request: Request): return await execute(request, None)
 
     @app.websocket("/graphql")
@@ -131,7 +158,18 @@ def create_app(
             return JSONResponse({"error": str(exc)}, status_code=404)
         return HTMLResponse(explorer.html(None))
 
-    @app.post("/models/{model_id}/graphql", include_in_schema=False)
+    @app.post(
+        "/models/{model_id}/graphql",
+        tags=["Building GraphQL"],
+        summary="Execute model-scoped simplified GraphQL",
+        description=(
+            "Domain-oriented building GraphQL scoped by the URL model ID. GET opens the "
+            "explorer; the same URL supports subscriptions over WebSocket using "
+            "graphql-transport-ws. Use introspection for the complete schema."
+        ),
+        responses=GRAPHQL_RESPONSES,
+        openapi_extra=GRAPHQL_OPENAPI,
+    )
     async def scoped_http(request: Request, model_id: str): return await execute(request, model_id)
 
     @app.websocket("/models/{model_id}/graphql")
