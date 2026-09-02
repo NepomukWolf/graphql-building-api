@@ -170,6 +170,10 @@ class GeometryService:
             if not request.config.cache_generated:
                 return None
 
+            existing_url = self.file_provider.url(request)
+            if existing_url:
+                return existing_url
+
             artifact = self.generate(request)
             if artifact is None:
                 return None
