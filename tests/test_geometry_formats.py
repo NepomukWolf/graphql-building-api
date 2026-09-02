@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import json
 import unittest
+from dataclasses import replace
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from unittest.mock import patch
 
 import numpy as np
@@ -10,6 +12,10 @@ import numpy as np
 from graphql_building_api.config import GeometryConfig
 from graphql_building_api.ifc.geometry_formats import get_geometry_format, normalize_geometry_format
 from graphql_building_api.ifc.geometry_service import (
+    GENERATED_GEOMETRY_CACHE_VERSION,
+    FileGeometryProvider,
+    GeometryArtifact,
+    GeometryService,
     GeometryRequest,
     GltfGeometryProvider,
     WktGeometryProvider,
@@ -100,6 +106,69 @@ class GeometryFormatTests(unittest.TestCase):
         self.assertEqual(encode_geometry_payload(b"abc", get_geometry_format("WKT")), "abc")
         self.assertEqual(encode_geometry_payload(b"abc", get_geometry_format("GLTF")), "abc")
         self.assertEqual(encode_geometry_payload(b"abc", get_geometry_format("GLB")), "YWJj")
+
+    def test_generated_cache_requires_matching_version_sidecar(self):
+        with TemporaryDirectory() as temporary:
+            request = GeometryRequest(
+                entity=object(),
+                guid="element",
+                format_name="GLB",
+                elements_dir=Path(temporary),
+                geometry_base_url="http://example.test/",
+                source="MODEL",
+                config=GeometryConfig(cache_generated=True),
+            )
+            provider = FileGeometryProvider()
+            artifact = GeometryArtifact(b"glb", get_geometry_format("GLB"))
+            provider.write(request, artifact)
+            self.assertFalse(provider.generated_cache_is_current(request))
+
+            provider.write_generated(request, artifact)
+            self.assertTrue(provider.generated_cache_is_current(request))
+            metadata = json.loads(provider.metadata_path(request).read_text())
+            self.assertEqual(metadata["version"], GENERATED_GEOMETRY_CACHE_VERSION)
+
+            metadata["version"] -= 1
+            provider.metadata_path(request).write_text(json.dumps(metadata))
+            self.assertFalse(provider.generated_cache_is_current(request))
+
+            provider.metadata_path(request).write_text("not json")
+            self.assertFalse(provider.generated_cache_is_current(request))
+
+    def test_file_source_accepts_legacy_cache_without_sidecar(self):
+        with TemporaryDirectory() as temporary:
+            request = replace(
+                geometry_request("GLB"),
+                elements_dir=Path(temporary),
+                source="FILE",
+                config=GeometryConfig(allow_dynamic_generation=False),
+            )
+            service = GeometryService()
+            service.file_provider.write(
+                request, GeometryArtifact(b"legacy", get_geometry_format("GLB"))
+            )
+            self.assertEqual(
+                service.url(request), "http://example.test/element/geometry.glb"
+            )
+
+    def test_model_source_regenerates_legacy_cache_and_writes_sidecar(self):
+        with TemporaryDirectory() as temporary:
+            request = replace(
+                geometry_request("GLB"),
+                elements_dir=Path(temporary),
+                config=GeometryConfig(cache_generated=True),
+            )
+            service = GeometryService()
+            legacy = GeometryArtifact(b"legacy", get_geometry_format("GLB"))
+            generated = GeometryArtifact(b"generated", get_geometry_format("GLB"))
+            service.file_provider.write(request, legacy)
+            with patch.object(service, "generate", return_value=generated) as generate:
+                self.assertEqual(
+                    service.url(request), "http://example.test/element/geometry.glb"
+                )
+            generate.assert_called_once_with(request)
+            self.assertEqual(service.file_provider.file_path(request).read_bytes(), b"generated")
+            self.assertTrue(service.file_provider.generated_cache_is_current(request))
 
 
 if __name__ == "__main__":

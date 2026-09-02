@@ -150,6 +150,10 @@ the single URL/payload geometry model. `GLB` remains the compact single-file
 binary glTF option. `WKT` is exported from the triangulated mesh as a
 `GEOMETRYCOLLECTION Z` of triangular polygons. `BREP` is exposed for future
 exact-geometry support and currently resolves from existing `.brep` files only.
+Generated GLB and GLTF meshes include explicit flat normals and preserve
+IfcOpenShell's per-face IFC surface styles as glTF PBR materials. Diffuse
+colour, transparency, style sidedness, and specularity-derived roughness are
+retained; textures and broader IFC reflectance models are not currently mapped.
 
 Geometry source can be requested per field:
 
@@ -163,6 +167,11 @@ geometry(format: PLY, source: MODEL) {
 The server decides whether client source preferences are honored through
 `config.toml`. Generated geometry is only written to `graphql_building_api/static/models/` when
 `geometry.cache_generated = true`.
+Generated cache entries carry an internal exporter-version sidecar. A
+`source: MODEL` request automatically regenerates an older or unversioned cache
+entry while keeping the public `geometry.<extension>` URL stable. A
+`source: FILE` request remains compatible with supplied files that have no
+sidecar.
 
 ## Schema Extensions
 

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import base64
 import json
+import os
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.parse import quote, urljoin
@@ -14,6 +16,9 @@ from graphql_building_api.config import GeometryConfig
 
 from .geometry import GeometryHandler
 from .geometry_formats import GeometryFormatSpec, get_geometry_format
+
+
+GENERATED_GEOMETRY_CACHE_VERSION = 2
 
 
 @dataclass(frozen=True)
@@ -44,6 +49,23 @@ class FileGeometryProvider:
     def file_path(self, request: GeometryRequest) -> Path:
         return request.elements_dir / request.guid / self.file_name(request)
 
+    def metadata_path(self, request: GeometryRequest) -> Path:
+        path = self.file_path(request)
+        return path.with_name(path.name + ".cache.json")
+
+    def generated_cache_is_current(self, request: GeometryRequest) -> bool:
+        if not self.file_path(request).is_file():
+            return False
+        try:
+            metadata = json.loads(self.metadata_path(request).read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return False
+        return metadata == {
+            "generator": "graphql-building-api",
+            "version": GENERATED_GEOMETRY_CACHE_VERSION,
+            "format": request.format.name,
+        }
+
     def url(self, request: GeometryRequest) -> str | None:
         if not self.file_path(request).is_file():
             return None
@@ -70,6 +92,41 @@ class FileGeometryProvider:
         path = self.file_path(request)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(artifact.data)
+        return path
+
+    def write_generated(self, request: GeometryRequest, artifact: GeometryArtifact) -> Path:
+        path = self.file_path(request)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix=f".{path.name}-", suffix=".tmp", dir=path.parent
+        )
+        temporary_artifact = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "wb") as target:
+                target.write(artifact.data)
+            os.replace(temporary_artifact, path)
+        finally:
+            temporary_artifact.unlink(missing_ok=True)
+
+        metadata_path = self.metadata_path(request)
+        descriptor, temporary_name = tempfile.mkstemp(
+            prefix=f".{metadata_path.name}-", suffix=".tmp", dir=path.parent
+        )
+        temporary_metadata = Path(temporary_name)
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8") as target:
+                json.dump(
+                    {
+                        "generator": "graphql-building-api",
+                        "version": GENERATED_GEOMETRY_CACHE_VERSION,
+                        "format": request.format.name,
+                    },
+                    target,
+                    separators=(",", ":"),
+                )
+            os.replace(temporary_metadata, metadata_path)
+        finally:
+            temporary_metadata.unlink(missing_ok=True)
         return path
 
 
@@ -161,7 +218,7 @@ class GeometryService:
             artifact = self.generate(request)
             if artifact is None:
                 return None
-            self.file_provider.write(request, artifact)
+            self.file_provider.write_generated(request, artifact)
             return self.file_provider.url_for(request)
 
         if request.source == "MODEL":
@@ -170,14 +227,13 @@ class GeometryService:
             if not request.config.cache_generated:
                 return None
 
-            existing_url = self.file_provider.url(request)
-            if existing_url:
-                return existing_url
+            if self.file_provider.generated_cache_is_current(request):
+                return self.file_provider.url_for(request)
 
             artifact = self.generate(request)
             if artifact is None:
                 return None
-            self.file_provider.write(request, artifact)
+            self.file_provider.write_generated(request, artifact)
             return self.file_provider.url_for(request)
 
         return None
@@ -195,9 +251,9 @@ class GeometryService:
             return None
 
         if request.config.cache_generated and request.source == "MODEL":
-            self.file_provider.write(request, artifact)
+            self.file_provider.write_generated(request, artifact)
         elif request.config.cache_generated and not self.file_provider.file_path(request).is_file():
-            self.file_provider.write(request, artifact)
+            self.file_provider.write_generated(request, artifact)
 
         return encode_geometry_payload(artifact.data, artifact.format)
 
