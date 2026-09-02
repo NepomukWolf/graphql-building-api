@@ -38,6 +38,7 @@ def execute_building_graphql(
     models_dir: Path,
     models_base_url: str,
     geometry_config: GeometryConfig,
+    change_hints: list[dict[str, Any]] | None = None,
     debug: bool = False,
 ) -> tuple[dict[str, Any], int]:
     variables = data.get("variables") or {}
@@ -51,6 +52,7 @@ def execute_building_graphql(
             "models_base_url": models_base_url,
             "geometry_format": requested_format or "obj",
             "geometry_config": geometry_config,
+            "change_hints": change_hints,
         },
         debug=debug,
     )

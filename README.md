@@ -110,6 +110,11 @@ subscription {
 }
 ```
 
+The schema also exposes `buildingElementsChanged` with optional aspect, STEP
+ID, GlobalId, and IFC-type filters. The standalone server emits a conservative
+`fullRefetchRequired` event, while the integrated `bim-api` host attributes
+committed mutations to a bounded list of `IfcElement` roots.
+
 The standalone server publishes an `UPDATED` event after a successful property
 mutation that changes its in-memory model. Failed and unchanged mutations do not
 publish. The broker and revision counters are in memory and intended for one

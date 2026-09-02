@@ -13,13 +13,39 @@ type Mutation {
 
 enum ModelChangeKind { CREATED UPDATED REPLACED DELETED }
 enum ModelChangeSource { FILE_API BUILDING_GRAPHQL IFC_GRAPHQL }
+enum BuildingElementChangeKind { CREATED UPDATED DELETED }
+enum BuildingElementChangeAspect { GEOMETRY PROPERTIES MATERIALS RELATIONSHIPS ATTRIBUTES UNKNOWN }
 type ModelChangeEvent {
   modelId: ID!
   revision: Int!
   kind: ModelChangeKind!
   source: ModelChangeSource!
 }
-type Subscription { modelChanged: ModelChangeEvent! }
+type BuildingElementChange {
+  stepId: ID!
+  globalId: ID!
+  ifcType: String!
+  kind: BuildingElementChangeKind!
+  aspects: [BuildingElementChangeAspect!]!
+}
+type BuildingElementsChangedEvent {
+  modelId: ID!
+  revision: Int!
+  kind: ModelChangeKind!
+  source: ModelChangeSource!
+  fullRefetchRequired: Boolean!
+  changes: [BuildingElementChange!]!
+}
+input BuildingElementChangeFilter {
+  aspects: [BuildingElementChangeAspect!]
+  stepIds: [ID!]
+  globalIds: [ID!]
+  ifcTypes: [String!]
+}
+type Subscription {
+  modelChanged: ModelChangeEvent!
+  buildingElementsChanged(filter: BuildingElementChangeFilter): BuildingElementsChangedEvent!
+}
 
 input UpdatePropertyInput {
   guid: ID!

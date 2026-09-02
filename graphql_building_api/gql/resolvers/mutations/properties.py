@@ -69,6 +69,7 @@ def resolve_update_property(_obj, info: GraphQLResolveInfo, input: UpdatePropert
 
     pset = model.by_id(pset_data["id"])
     edit_pset(model, pset=pset, properties={property_name: new_value})
+    _record_property_change(info, element)
 
     return attach_model_context(element_info(element), model_context)
 
@@ -107,7 +108,23 @@ def resolve_patch_properties(
     else:
         model.end_transaction()
 
+    _record_property_change(info, element)
+
     return attach_model_context(element_info(element), model_context)
+
+
+def _record_property_change(info: GraphQLResolveInfo, element: entity_instance) -> None:
+    hints = info.context.get("change_hints")
+    if hints is not None:
+        hints.append(
+            {
+                "kind": "UPDATED",
+                "step_id": element.id(),
+                "global_id": element.GlobalId,
+                "ifc_type": element.is_a(),
+                "aspects": ("PROPERTIES",),
+            }
+        )
 
 
 def _entity_by_guid(model, guid: str) -> entity_instance:

@@ -17,7 +17,11 @@ from starlette.staticfiles import StaticFiles
 from graphql_building_api.config import (
     API_DIR, DEFAULT_MODEL, DEFAULT_PORT, DISABLED_EXTENSIONS, GEOMETRY_CONFIG, MODELS_DIR,
 )
-from graphql_building_api.events import InMemoryEventBroker, ModelChangeEvent
+from graphql_building_api.events import (
+    BuildingElementsChangedEvent,
+    InMemoryEventBroker,
+    ModelChangeEvent,
+)
 from graphql_building_api.execution import build_building_schema, execute_building_graphql
 from graphql_building_api.ifc.models import IfcModelStore
 
@@ -112,6 +116,15 @@ def create_app(
         if changed:
             revisions[selected_id] = revisions.get(selected_id, 0) + 1
             await broker.publish(ModelChangeEvent(selected_id, revisions[selected_id], "UPDATED", "BUILDING_GRAPHQL"))
+            await broker.publish(
+                BuildingElementsChangedEvent(
+                    selected_id,
+                    revisions[selected_id],
+                    "UPDATED",
+                    "BUILDING_GRAPHQL",
+                    True,
+                )
+            )
         return JSONResponse(result, status_code=status)
 
     @app.get("/")
